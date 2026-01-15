@@ -1,10 +1,12 @@
 import json 
 from rest_framework import viewsets, permissions, status
+from rest_framework.decorators import action 
 from rest_framework.views import APIView 
 from rest_framework.response import Response
 from django.core.mail import send_mail
 from django.shortcuts import render 
 from django.contrib.auth import authenticate, login, logout
+from django.db.models import Q
 from .models import User, Restaurante, Producto, Pedido, DetallePedido
 from .serializers import RestauranteSerializer, ProductoSerializer, PedidoSerializer, RegistroSerializer, VerificacionSerializer
 
@@ -41,13 +43,18 @@ TARIFAS_DOMICILIO = {
     'Edificio Séneca': 4000,
     'La Caneca': 4000
 }
-
 TARIFA_DEFAULT = 3000 # Si ponen un edificio raro, cobramos promedio
 
 # -----------------------------------------------------------------------------
-# 0. VISTA PRINCIPAL
+# 0. VISTAS PRINCIPALES
 # -----------------------------------------------------------------------------
-def home(request):
+
+# NUEVA: La página corporativa (Raíz)
+def landing_page(request):
+    return render(request, 'landing.html')
+
+# ANTES HOME, AHORA WEBAPP: La aplicación funcional
+def webapp(request):
     return render(request, 'index.html')
 
 # -----------------------------------------------------------------------------
@@ -59,7 +66,7 @@ class RestauranteViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
 # -----------------------------------------------------------------------------
-# 2. VISTA DE PEDIDOS (Calculadora Inteligente)
+# 2. VISTA DE PEDIDOS (Calculadora Inteligente & Logística)
 # -----------------------------------------------------------------------------
 class PedidoViewSet(viewsets.ModelViewSet):
     serializer_class = PedidoSerializer
@@ -67,37 +74,73 @@ class PedidoViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        if user.is_superuser:
+        
+        # 1. ADMIN: Ve todo
+        if user.is_superuser or user.rol == 'ADMIN':
             return Pedido.objects.all().order_by('-fecha_creacion')
+            
+        # 2. REPARTIDOR: Ve la "Bolsa" (En cocina sin dueño) + Sus Entregas
+        if user.rol == 'REPARTIDOR':
+            return Pedido.objects.filter(
+                Q(estado='EN_COCINA', repartidor__isnull=True) | # Bolsa disponible
+                Q(repartidor=user) # Mis entregas
+            ).order_by('-fecha_creacion')
+            
+        # 3. CLIENTE: Solo ve los suyos
         return Pedido.objects.filter(cliente=user).order_by('-fecha_creacion')
 
+    # --- LÓGICA DE REPARTIDOR (LIMITE 3 PEDIDOS) ---
+    @action(detail=True, methods=['post'])
+    def tomar_pedido(self, request, pk=None):
+        pedido = self.get_object()
+        user = request.user
+        
+        if user.rol != 'REPARTIDOR':
+            return Response({'error': 'Solo repartidores pueden tomar pedidos'}, status=403)
+            
+        if pedido.repartidor is not None:
+            return Response({'error': 'Este pedido ya lo tomó alguien más'}, status=400)
+            
+        # Validar límite de carga (máximo 3 pedidos activos)
+        pedidos_activos = Pedido.objects.filter(repartidor=user, estado='EN_CAMINO').count()
+        if pedidos_activos >= 3:
+            return Response({'error': '¡Tienes 3 pedidos activos! Entrega uno antes de tomar más.'}, status=400)
+            
+        pedido.repartidor = user
+        pedido.estado = 'EN_CAMINO'
+        pedido.save()
+        return Response({'status': 'Pedido asignado, corre a entregarlo!'}, status=200)
+
+    @action(detail=True, methods=['post'])
+    def entregar_pedido(self, request, pk=None):
+        pedido = self.get_object()
+        if request.user != pedido.repartidor:
+            return Response({'error': 'No eres el repartidor de este pedido'}, status=403)
+            
+        pedido.estado = 'ENTREGADO'
+        pedido.save()
+        return Response({'status': 'Pedido entregado, buen trabajo!'}, status=200)
+
+    # --- CREACIÓN DE PEDIDO (Calculadora de Costos) ---
     def create(self, request, *args, **kwargs):
-        # 1. Parche para leer items desde FormData (cuando hay foto)
+        # 1. Parche para leer items desde FormData
         items_raw = request.data.get('items', '[]')
-        if isinstance(items_raw, str):
-            try:
-                items_data = json.loads(items_raw)
-            except json.JSONDecodeError:
-                items_data = []
-        else:
-            items_data = items_raw
+        items_data = json.loads(items_raw) if isinstance(items_raw, str) else items_raw
 
         # 2. Calcular Tarifa Dinámica según Edificio
         edificio = request.data.get('edificio_entrega', '')
-        # Buscamos la tarifa exacta en el diccionario
         costo_domicilio_base = TARIFAS_DOMICILIO.get(edificio, TARIFA_DEFAULT)
         
         # --- LÓGICA DE PRIORIDAD ---
         tipo_entrega = request.data.get('tipo_entrega', 'NORMAL')
         costo_extra = 0
-        
-        if tipo_entrega == 'PRIORITARIA':
-            costo_extra = 2000
-        elif tipo_entrega == 'FLEXIBLE':
-            costo_extra = -1000
+        if tipo_entrega == 'PRIORITARIA': costo_extra = 2000
+        elif tipo_entrega == 'FLEXIBLE': costo_extra = -1000
             
-        # Sumamos todo: Domicilio Base + Extra Prioridad
         costo_domicilio_total = costo_domicilio_base + costo_extra
+        
+        # PROCESAR PROPINA
+        propina = int(request.data.get('propina', 0))
         
         total_comida = 0
         productos_validos = []
@@ -117,13 +160,13 @@ class PedidoViewSet(viewsets.ModelViewSet):
             except Producto.DoesNotExist:
                 pass
 
-        total_final = total_comida + costo_domicilio_total
+        total_final = total_comida + costo_domicilio_total + propina
 
         # 4. Crear el Pedido con los precios corregidos
-        # Usamos request.data mutable o creamos un diccionario nuevo para forzar nuestros valores
         datos_pedido = request.data.copy()
         datos_pedido['total_pagar'] = total_final
         datos_pedido['costo_domicilio'] = costo_domicilio_total
+        datos_pedido['propina'] = propina
         
         serializer = self.get_serializer(data=datos_pedido, partial=True)
         serializer.is_valid(raise_exception=True)
@@ -131,7 +174,8 @@ class PedidoViewSet(viewsets.ModelViewSet):
         pedido = serializer.save(
             cliente=self.request.user,
             total_pagar=total_final,
-            costo_domicilio=costo_domicilio_total
+            costo_domicilio=costo_domicilio_total,
+            propina=propina
         )
 
         for p in productos_validos:
@@ -154,12 +198,22 @@ class LoginView(APIView):
         email = request.data.get('email')
         password = request.data.get('password')
         user = authenticate(request, email=email, password=password)
+        
         if user is not None:
             if user.is_active:
+                # Validar aspirantes pendientes
+                if user.rol == 'ASPIRANTE':
+                    return Response({"error": "Tu solicitud de domiciliario está en revisión por la administración."}, status=403)
+                
                 login(request, user)
-                return Response({"mensaje": "Bienvenido", "nombre": user.nombre_completo})
+                # DEVOLVEMOS EL ROL PARA QUE EL FRONTEND SEPA QUÉ PANTALLA MOSTRAR
+                return Response({
+                    "mensaje": "Bienvenido", 
+                    "nombre": user.nombre_completo,
+                    "rol": user.rol 
+                })
             else:
-                return Response({"error": "Cuenta inactiva."}, status=status.HTTP_401_UNAUTHORIZED)
+                return Response({"error": "Cuenta inactiva. Verifica tu correo."}, status=status.HTTP_401_UNAUTHORIZED)
         else:
             return Response({"error": "Credenciales incorrectas"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -177,7 +231,7 @@ class RegistroView(APIView):
             codigo = user.generar_codigo_verificacion()
             print(f"\n{'='*40}\n📧 EMAIL: {user.email}\n🔑 CÓDIGO: {codigo}\n{'='*40}\n")
             send_mail('Tu código', f'Código: {codigo}', 'admin@uniandes.co', [user.email], fail_silently=False)
-            return Response({"mensaje": "Creado", "email": user.email}, status=status.HTTP_201_CREATED)
+            return Response({"mensaje": "Usuario creado.", "email": user.email}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class VerificacionView(APIView):

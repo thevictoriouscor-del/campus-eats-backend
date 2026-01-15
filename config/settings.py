@@ -1,19 +1,18 @@
 from pathlib import Path
 import os
-import dj_database_url # <--- IMPORTANTE: Librería para leer la base de datos de la nube
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
-# En la nube leerá la variable, en local usa la insegura por defecto
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-tu-clave-secreta-aqui')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-# En la nube será False automáticamente si configuras la variable RENDER
 DEBUG = 'RENDER' not in os.environ
 
-ALLOWED_HOSTS = ['*']
+# AQUI AGREGAMOS TU DOMINIO OFICIAL PARA QUE DJANGO LO ACEPTE
+ALLOWED_HOSTS = ['*', 'andeseats.com', 'www.andeseats.com']
 
 INSTALLED_APPS = [
     'jazzmin',
@@ -59,9 +58,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-# --- BASE DE DATOS INTELIGENTE (SQLite Local / PostgreSQL Nube) ---
-# Si existe la variable DATABASE_URL (en Render), usa PostgreSQL.
-# Si no (en tu PC), usa el archivo db.sqlite3.
+# BASE DE DATOS
 DATABASES = {
     'default': dj_database_url.config(
         default=f'sqlite:///{BASE_DIR / "db.sqlite3"}',
@@ -85,13 +82,27 @@ STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
-# Media files (FOTOS)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'core.User'
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# --- CONFIGURACIÓN DE CORREO UNIVERSAL (Hostinger o Gmail) ---
+# Usaremos hola@andeseats.com preferiblemente
+if 'EMAIL_HOST_USER' in os.environ:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    # Ahora leemos el Host y Puerto de las variables de Render
+    # Si no las pones, usa Gmail por defecto.
+    EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
+    EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
+    EMAIL_USE_TLS = True
+    EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
+    EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
+    DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+else:
+    # Modo local (Consola)
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # Seguridad de Sesiones
 SESSION_COOKIE_AGE = 600 
@@ -99,15 +110,15 @@ SESSION_SAVE_EVERY_REQUEST = True
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 LOGOUT_REDIRECT_URL = '/admin/login/'
 
-# Diseño Admin
+# Diseño Admin (ACTUALIZADO CON TU NUEVA MARCA)
 JAZZMIN_SETTINGS = {
-    "site_title": "Campus Eats Admin",
-    "site_header": "Campus Eats",
-    "site_brand": "Campus Eats",
+    "site_title": "Andes Eats Admin",
+    "site_header": "Andes Eats",
+    "site_brand": "Andes Eats",
     "welcome_sign": "Bienvenido al Centro de Comando",
-    "copyright": "Campus Eats Ltd",
+    "copyright": "Andes Eats SAS",
     "search_model": "core.User",
-    "topmenu_links": [{"name": "Ver Sitio Web", "url": "home", "permissions": ["auth.view_user"]}],
+    "topmenu_links": [{"name": "Ver Sitio Web", "url": "landing", "permissions": ["auth.view_user"]}],
     "show_sidebar": True,
     "navigation_expanded": True,
     "icons": {
