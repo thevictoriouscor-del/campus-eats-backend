@@ -3,71 +3,135 @@ from django.utils.html import mark_safe
 from django.contrib import messages
 from .models import User, Restaurante, Producto, Pedido, DetallePedido
 
-# Configuración General
-admin.site.site_header = "Campus Eats Gerencia"
+# -----------------------------------------------------------------------------
+# CONFIGURACIÓN GENERAL DEL PANEL
+# -----------------------------------------------------------------------------
+admin.site.site_header = "Andes Eats Gerencia"
 admin.site.site_title = "Admin"
+admin.site.index_title = "Panel de Control"
 
+# -----------------------------------------------------------------------------
+# 1. USUARIOS
+# -----------------------------------------------------------------------------
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
-    list_display = ('email', 'nombre_completo', 'codigo_estudiante', 'rol', 'is_active')
-    search_fields = ('email', 'nombre_completo')
-    list_filter = ('rol',)
+    list_display = ('email', 'nombre_completo', 'codigo_estudiante', 'rol_visual', 'is_active', 'email_verificado')
+    search_fields = ('email', 'nombre_completo', 'codigo_estudiante')
+    list_filter = ('rol', 'is_active')
+    actions = ['activar_usuarios', 'convertir_repartidor']
 
+    def rol_visual(self, obj):
+        colors = {
+            'ESTUDIANTE': 'blue',
+            'ASPIRANTE': 'orange',
+            'REPARTIDOR': 'purple',
+            'ADMIN': 'red',
+        }
+        color = colors.get(obj.rol, 'black')
+        return mark_safe(f'<span style="color: {color}; font-weight: bold;">{obj.get_rol_display()}</span>')
+    rol_visual.short_description = "Rol"
+
+    # Acciones masivas para gestión de personal
+    def activar_usuarios(self, request, queryset):
+        queryset.update(is_active=True)
+        self.message_user(request, "Usuarios activados exitosamente.", messages.SUCCESS)
+    activar_usuarios.short_description = "✅ Activar usuarios seleccionados"
+
+    def convertir_repartidor(self, request, queryset):
+        queryset.update(rol='REPARTIDOR', is_active=True)
+        self.message_user(request, "Usuarios ascendidos a Repartidores.", messages.SUCCESS)
+    convertir_repartidor.short_description = "🛵 Aprobar como Repartidor"
+
+# -----------------------------------------------------------------------------
+# 2. RESTAURANTES
+# -----------------------------------------------------------------------------
 @admin.register(Restaurante)
 class RestauranteAdmin(admin.ModelAdmin):
-    list_display = ('nombre', 'ubicacion_local', 'activo')
+    list_display = ('nombre', 'ubicacion_local', 'celular_pedidos', 'activo')
+    list_filter = ('activo',)
+    search_fields = ('nombre',)
 
+# -----------------------------------------------------------------------------
+# 3. PRODUCTOS
+# -----------------------------------------------------------------------------
 @admin.register(Producto)
 class ProductoAdmin(admin.ModelAdmin):
-    list_display = ('nombre', 'restaurante', 'precio', 'disponible')
-    list_filter = ('restaurante',)
+    list_display = ('nombre', 'restaurante', 'precio_formato', 'disponible')
+    list_filter = ('restaurante', 'disponible')
+    search_fields = ('nombre',)
 
-# --- CONFIGURACIÓN DE PEDIDOS AVANZADA ---
+    def precio_formato(self, obj):
+        return f"${obj.precio:,.0f}"
+    precio_formato.short_description = "Precio"
+
+# -----------------------------------------------------------------------------
+# 4. PEDIDOS (LA JOYA DE LA CORONA)
+# -----------------------------------------------------------------------------
 class DetallePedidoInline(admin.TabularInline):
     model = DetallePedido
     extra = 0
+    readonly_fields = ('subtotal_visual',)
+
+    def subtotal_visual(self, obj):
+        return f"${obj.subtotal():,.0f}"
+    subtotal_visual.short_description = "Subtotal"
 
 @admin.register(Pedido)
 class PedidoAdmin(admin.ModelAdmin):
+    # Columnas visibles en la lista
     list_display = (
         'id', 
-        'jornada_entrega',      # <--- 1. PRIMERO LA HORA (Clave para la ruta)
-        'tipo_entrega_visual',  # <--- 2. LUEGO LA PRIORIDAD
-        'edificio_entrega',     # <--- 3. LUEGO EL LUGAR
-        'cliente_info', 
-        'estado_coloreado', 
-        'total_formateado', 
-        'ver_comprobante', 
-        'acciones_rapidas'
+        'jornada_entrega',      # Logística: Hora
+        'tipo_entrega_visual',  # Logística: Prioridad
+        'edificio_entrega',     # Logística: Lugar
+        'estado_coloreado',     # Estado actual
+        'cliente_info',         # Quién pide
+        'repartidor_info',      # Quién lleva (Nuevo)
+        'total_final_visual',   # Cuánto cobramos
+        'ver_comprobante',      # Foto del pago
+        'acciones_rapidas'      # Botones
     )
-    # FILTROS LATERALES PARA GESTIÓN RÁPIDA
-    list_filter = ('jornada_entrega', 'tipo_entrega', 'estado', 'fecha_creacion', 'edificio_entrega')
     
-    search_fields = ('cliente__nombre_completo', 'cliente__codigo_estudiante', 'id')
-    inlines = [DetallePedidoInline]
+    # Filtros laterales para Sara
+    list_filter = (
+        'jornada_entrega', 
+        'tipo_entrega', 
+        'estado', 
+        'edificio_entrega',
+        'fecha_creacion'
+    )
     
-    # ORDEN LÓGICO DE ENTREGA: Hora -> Prioridad (Desc) -> Edificio
+    search_fields = ('cliente__nombre_completo', 'cliente__codigo_estudiante', 'id', 'edificio_entrega')
+    
+    # Orden por defecto: Primero la Jornada, luego Prioridad, luego Edificio
     ordering = ['jornada_entrega', '-tipo_entrega', 'edificio_entrega']
     
-    # Acciones masivas
+    inlines = [DetallePedidoInline]
+    
     actions = ['marcar_aprobado', 'marcar_en_camino', 'marcar_entregado']
 
-    # 1. Mostrar Info Cliente Bonita
+    # --- MÉTODOS VISUALES ---
+
     def cliente_info(self, obj):
-        return f"{obj.cliente.nombre_completo} ({obj.cliente.codigo_estudiante})"
+        return f"{obj.cliente.nombre_completo}"
     cliente_info.short_description = "Cliente"
 
-    # 2. Dinero con signo pesos
-    def total_formateado(self, obj):
-        return f"${obj.total_pagar:,.0f}"
-    total_formateado.short_description = "Total"
+    def repartidor_info(self, obj):
+        if obj.repartidor:
+            return f"🛵 {obj.repartidor.nombre_completo}"
+        return "-"
+    repartidor_info.short_description = "Repartidor"
 
-    # 3. Estado con Colores
+    def total_final_visual(self, obj):
+        # Muestra el total con propina si aplica
+        return f"${obj.total_pagar:,.0f}"
+    total_final_visual.short_description = "Total"
+
     def estado_coloreado(self, obj):
         colors = {
             'PENDIENTE': 'orange',
             'VERIFICANDO': 'blue',
-            'EN_COCINA': 'purple',
+            'EN_COCINA': 'purple', # Aprobado
             'EN_CAMINO': 'teal',
             'ENTREGADO': 'green',
             'CANCELADO': 'red',
@@ -76,16 +140,15 @@ class PedidoAdmin(admin.ModelAdmin):
         return mark_safe(f'<span style="color: {color}; font-weight: bold;">{obj.get_estado_display()}</span>')
     estado_coloreado.short_description = "Estado"
 
-    # 4. PRIORIDAD VISUAL (Iconos)
     def tipo_entrega_visual(self, obj):
         if obj.tipo_entrega == 'PRIORITARIA':
-            return mark_safe('<span style="color:red; font-weight:bold;">⚡ FLASH</span>')
+            return mark_safe('<span style="color:red; font-weight:900;">⚡ FLASH</span>')
         elif obj.tipo_entrega == 'FLEXIBLE':
             return mark_safe('<span style="color:green;">🐢 Relax</span>')
         return "Normal"
     tipo_entrega_visual.short_description = "Prioridad"
 
-    # 5. FOTO CON ZOOM (JavaScript Inyectado)
+    # FOTO CON ZOOM (JavaScript Inyectado)
     def ver_comprobante(self, obj):
         if obj.comprobante_pago:
             img_id = f"img_{obj.id}"
@@ -120,25 +183,29 @@ class PedidoAdmin(admin.ModelAdmin):
         return "-"
     ver_comprobante.short_description = "Comprobante"
 
-    # 6. BOTONES DE ACCIÓN RÁPIDA
+    # BOTONES DE ACCIÓN RÁPIDA
     def acciones_rapidas(self, obj):
         if obj.estado in ['PENDIENTE', 'VERIFICANDO']:
-            return mark_safe(f'<a class="button" style="background-color: #28a745; color: white; padding: 5px 10px; border-radius: 5px; text-decoration: none;" href="/admin/core/pedido/{obj.id}/change/">🔍 Revisar</a>')
+            return mark_safe(f'''
+                <a class="button" style="background-color: #28a745; color: white; padding: 4px 8px; border-radius: 4px; font-weight:bold; text-decoration: none;" href="/admin/core/pedido/{obj.id}/change/">
+                   🔍 Revisar
+                </a>
+            ''')
         return "-"
     acciones_rapidas.short_description = "Acciones"
 
     # --- FUNCIONES DE ACCIÓN MASIVA (Dropdown) ---
     def marcar_aprobado(self, request, queryset):
         queryset.update(estado='EN_COCINA')
-        self.message_user(request, "Pedidos aprobados y enviados a cocina.", messages.SUCCESS)
+        self.message_user(request, "✅ Pedidos aprobados y enviados a cocina.", messages.SUCCESS)
     marcar_aprobado.short_description = "✅ Aprobar y enviar a Cocina"
 
     def marcar_en_camino(self, request, queryset):
         queryset.update(estado='EN_CAMINO')
-        self.message_user(request, "Pedidos marcados como En Camino.", messages.INFO)
+        self.message_user(request, "🛵 Pedidos marcados como En Camino.", messages.INFO)
     marcar_en_camino.short_description = "🛵 Marcar como En Camino"
 
     def marcar_entregado(self, request, queryset):
         queryset.update(estado='ENTREGADO')
-        self.message_user(request, "Pedidos finalizados con éxito.", messages.SUCCESS)
+        self.message_user(request, "🏁 Pedidos finalizados con éxito.", messages.SUCCESS)
     marcar_entregado.short_description = "🏁 Finalizar (Entregado)"
