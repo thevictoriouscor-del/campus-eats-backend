@@ -89,7 +89,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'core.User'
 
 # --- CONFIGURACIÓN DE CORREO UNIVERSAL (Hostinger o Gmail) ---
-# Usaremos hola@andeseats.com preferiblemente
+# Usaremos contacto@andeseats.com
 if 'EMAIL_HOST_USER' in os.environ:
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
     # Ahora leemos el Host y Puerto de las variables de Render
