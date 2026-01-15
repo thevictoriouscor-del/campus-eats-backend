@@ -3,12 +3,13 @@ from django.contrib.auth.password_validation import validate_password
 from .models import User, Restaurante, Producto, Pedido, DetallePedido
 
 # -----------------------------------------------------------------------------
-# 1. TRADUCTOR DE USUARIOS
+# 1. TRADUCTOR DE USUARIOS (Ahora incluye celular para logística)
 # -----------------------------------------------------------------------------
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'nombre_completo', 'codigo_estudiante', 'rol']
+        # Agregamos 'celular' para que el repartidor pueda contactar
+        fields = ['id', 'nombre_completo', 'codigo_estudiante', 'rol', 'celular']
 
 # -----------------------------------------------------------------------------
 # 2. PRODUCTOS
@@ -37,7 +38,7 @@ class DetallePedidoSerializer(serializers.ModelSerializer):
         fields = ['id', 'producto', 'nombre_producto', 'cantidad', 'precio_unitario', 'subtotal']
 
 # -----------------------------------------------------------------------------
-# 5. PEDIDOS (COMPLETO CON DOMICILIARIO Y PROPINA)
+# 5. PEDIDOS
 # -----------------------------------------------------------------------------
 class PedidoSerializer(serializers.ModelSerializer):
     items = DetallePedidoSerializer(many=True, read_only=True)
@@ -49,18 +50,17 @@ class PedidoSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'cliente', 'cliente_info', 'repartidor', 'repartidor_info',
             'edificio_entrega', 'detalle_ubicacion', 
-            'estado', 'total_pagar', 'costo_domicilio', 'propina', # <--- CAMPO NUEVO
+            'estado', 'total_pagar', 'costo_domicilio', 'propina',
             'comprobante_pago', 'fecha_creacion', 'items',
-            'jornada_entrega', 'tipo_entrega' # <--- CAMPOS NUEVOS
+            'jornada_entrega', 'tipo_entrega'
         ]
         extra_kwargs = {'cliente': {'read_only': True}, 'repartidor': {'read_only': True}}
 
 # -----------------------------------------------------------------------------
-# 6. REGISTRO (CON OPCIÓN DE REPARTIDOR)
+# 6. REGISTRO
 # -----------------------------------------------------------------------------
 class RegistroSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
-    # Campo opcional para solicitar ser repartidor
     es_aspirante = serializers.BooleanField(write_only=True, required=False, default=False)
 
     class Meta:
@@ -70,7 +70,6 @@ class RegistroSerializer(serializers.ModelSerializer):
     
     def create(self, validated_data):
         es_aspirante = validated_data.pop('es_aspirante', False)
-        # Si marca el checkbox, entra como ASPIRANTE, sino como ESTUDIANTE
         rol_asignado = 'ASPIRANTE' if es_aspirante else 'ESTUDIANTE'
         
         user = User.objects.create_user(

@@ -4,119 +4,96 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Uniandes Eats</title>
-    <!-- Tailwind CSS (Diseño) -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Iconos -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    
     <style>
-        /* --- ANIMACIONES SUAVES --- */
-        .fade-in { animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        .scale-in { animation: scaleIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        @keyframes scaleIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
-
-        .toast-enter { transform: translateY(-150%); opacity: 0; transition: all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55); }
-        .toast-visible { transform: translateY(0); opacity: 1; }
-
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
         .hidden-screen { display: none !important; }
-        .ping { animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite; }
-        @keyframes ping { 75%, 100% { transform: scale(2); opacity: 0; } }
+        .toast-enter { transform: translateY(-100%); opacity: 0; transition: all 0.3s ease-out; }
+        .toast-visible { transform: translateY(0); opacity: 1; }
+        .scale-in { animation: scaleIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes scaleIn { from { transform: scale(0); } to { transform: scale(1); } }
+        .step-active { @apply bg-green-500 border-green-500; }
+        .step-inactive { @apply bg-gray-200 border-gray-200; }
         
-        /* Validación de contraseña */
-        .valid-crit { color: #16a34a; font-weight: 700; transition: color 0.3s; }
-        .invalid-crit { color: #9ca3af; transition: color 0.3s; }
+        /* Estilo para validación de contraseña */
+        .valid-crit { color: #16a34a; font-weight: bold; } /* Verde */
+        .invalid-crit { color: #9ca3af; } /* Gris */
     </style>
 </head>
-<!-- FONDO CON IMAGEN DE CAMPUS -->
-<body class="font-sans text-gray-800 h-screen flex justify-center items-center p-4 selection:bg-yellow-200 bg-cover bg-center relative" style="background-image: url('https://images.unsplash.com/photo-1541339907198-e08756dedf3f?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80');">
-    
-    <!-- CAPA OSCURA Y BORROSA SOBRE LA IMAGEN -->
-    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm z-0"></div>
-
+<body class="bg-gray-100 font-sans text-gray-800 h-screen flex justify-center items-center p-4">
     <script>const CSRF_TOKEN = '{{ csrf_token }}';</script>
     
-    <!-- CONTENEDOR PRINCIPAL (ULTRA ANCHO 95%) -->
-    <div class="w-full md:max-w-[95%] h-full md:h-[95vh] bg-white sm:rounded-3xl shadow-2xl overflow-hidden relative flex flex-col transition-all duration-500 ease-out z-10 border border-white/20">
-        
-        <!-- TOAST (Notificación) -->
-        <div id="toast-container" class="absolute top-4 left-0 right-0 z-50 pointer-events-none toast-enter flex justify-center">
-            <div id="toast-message" class="bg-gray-900 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-2 text-sm font-bold border border-gray-700 backdrop-blur-md">
-                <span></span>
-            </div>
+    <div class="w-full md:max-w-7xl h-full md:h-[95vh] bg-white sm:rounded-3xl shadow-2xl overflow-hidden relative flex flex-col transition-all duration-300">
+        <!-- TOAST -->
+        <div id="toast-container" class="absolute top-0 left-0 right-0 p-4 z-50 pointer-events-none toast-enter">
+            <div id="toast-message" class="bg-gray-900 text-white px-6 py-4 rounded-xl shadow-lg flex items-center justify-center text-sm font-bold mx-auto w-max max-w-full"><span></span></div>
         </div>
         
-        <!-- HEADER -->
+        <!-- HEADER (UNIANDES EATS) -->
         <div class="bg-yellow-400 p-6 text-center md:text-left md:flex md:justify-between md:items-center rounded-b-[2rem] shadow-md z-10 relative">
             <div class="absolute top-4 left-4 right-4 md:static md:order-2 md:w-auto flex justify-between md:gap-4">
-                <div id="user-info" class="text-xs font-bold hidden bg-white/30 px-3 py-1.5 rounded-lg backdrop-blur-sm flex items-center gap-2 transition hover:bg-white/50">
+                <div id="user-info" class="text-xs font-bold hidden bg-white/30 px-3 py-1.5 rounded-lg backdrop-blur-sm flex items-center gap-2">
                     <i data-lucide="user" class="w-3 h-3"></i> <span id="user-role-label"></span>
                 </div>
-                <button id="btn-logout" onclick="tryLogout()" class="text-xs font-bold bg-black text-white px-4 py-1.5 rounded-full hidden hover:bg-gray-800 transition shadow-lg hover:scale-105 active:scale-95">Salir</button>
+                <button id="btn-logout" onclick="tryLogout()" class="text-xs font-bold bg-black text-white px-4 py-1.5 rounded-full hidden hover:bg-gray-800 transition shadow-lg">Salir</button>
             </div>
             <div class="mt-8 md:mt-0 md:flex md:items-center md:gap-4 md:order-1">
-                <div class="flex justify-center md:inline-block mb-2 md:mb-0">
-                    <div class="bg-black text-yellow-400 p-3 rounded-full shadow-lg cursor-pointer hover:rotate-12 transition duration-300" onclick="showScreen('screen-menu')">
-                        <i data-lucide="utensils" class="w-8 h-8"></i>
-                    </div>
-                </div>
-                <div>
-                    <h1 class="text-2xl font-black text-black tracking-tight">Uniandes Eats</h1>
-                    <p class="text-xs font-semibold text-gray-800 opacity-70">Tu comida, sin filas.</p>
-                </div>
+                <div class="flex justify-center md:inline-block mb-2 md:mb-0"><div class="bg-black text-yellow-400 p-3 rounded-full shadow-lg cursor-pointer" onclick="showScreen('screen-menu')"><i data-lucide="utensils" class="w-8 h-8"></i></div></div>
+                <div><h1 class="text-2xl font-bold text-black tracking-tight">Uniandes Eats</h1><p class="text-xs font-semibold text-gray-800 opacity-70">Tu comida, sin filas.</p></div>
             </div>
         </div>
 
-        <!-- ÁREA DE CONTENIDO -->
-        <div class="flex-1 p-6 overflow-y-auto relative bg-gray-50 pb-32 scroll-smooth">
+        <!-- CONTENIDO -->
+        <div class="flex-1 p-6 overflow-y-auto relative bg-gray-50 pb-24 scroll-smooth">
             
             <!-- 1. LOGIN -->
             <div id="screen-login" class="fade-in space-y-6 pt-4 max-w-md mx-auto">
-                <div class="text-center"><h2 class="text-xl font-bold text-gray-800">Iniciar Sesión</h2></div>
+                <div class="text-center"><h2 class="text-xl font-bold text-gray-700">Iniciar Sesión</h2></div>
                 <form id="form-login" class="space-y-4">
-                    <input type="email" id="login-email" placeholder="Correo Uniandes" class="w-full p-4 bg-white rounded-xl border border-gray-200 focus:border-yellow-400 focus:ring-2 focus:ring-yellow-100 outline-none transition" required>
+                    <input type="email" id="login-email" placeholder="Correo" class="w-full p-4 bg-white rounded-xl border" required>
                     <div class="relative">
-                        <input type="password" id="login-password" placeholder="Contraseña" class="w-full p-4 bg-white rounded-xl border border-gray-200 focus:border-yellow-400 focus:ring-2 focus:ring-yellow-100 outline-none transition" required>
-                        <div class="text-right mt-2">
-                            <a href="#" onclick="showToast('Contacta a soporte@andeseats.com', true)" class="text-xs text-gray-400 hover:text-yellow-600 font-semibold transition">¿Olvidaste tu contraseña?</a>
+                        <input type="password" id="login-password" placeholder="Contraseña" class="w-full p-4 bg-white rounded-xl border" required>
+                        <div class="text-right mt-1">
+                            <a href="#" onclick="alert('Funcionalidad de recuperación próximamente.')" class="text-xs text-gray-500 hover:text-yellow-600 font-semibold">¿Olvidaste tu contraseña?</a>
                         </div>
                     </div>
-                    <button type="submit" class="w-full bg-black text-white font-bold py-4 rounded-xl shadow-lg hover:bg-gray-800 transition transform active:scale-95">ENTRAR</button>
+                    <button type="submit" class="w-full bg-black text-white font-bold py-4 rounded-xl shadow-lg">ENTRAR</button>
                 </form>
-                <div class="text-center pt-6 border-t border-gray-200 mt-6 flex flex-col gap-3">
-                    <button onclick="showScreen('screen-register')" class="w-full py-3 rounded-xl border border-yellow-200 bg-yellow-50 text-yellow-700 font-bold hover:bg-yellow-100 transition">🎓 Crear Cuenta Uniandina</button>
-                    <button onclick="showScreen('screen-register-courier')" class="text-gray-400 text-xs font-bold hover:text-black transition flex items-center justify-center gap-1"><i data-lucide="bike" class="w-3 h-3"></i> Trabaja con nosotros</button>
+                <div class="text-center pt-4 border-t border-gray-200 mt-6 flex flex-col gap-3">
+                    <button onclick="showScreen('screen-register')" class="text-yellow-600 font-bold hover:underline bg-yellow-50 p-3 rounded-xl border border-yellow-100">🎓 Crear Cuenta Uniandina</button>
+                    <button onclick="showScreen('screen-register-courier')" class="text-gray-500 text-xs font-bold hover:text-black">🚴 Trabaja con nosotros</button>
                 </div>
             </div>
 
-            <!-- 2. REGISTRO USUARIO -->
+            <!-- 2. REGISTRO (ESTUDIANTE / PROFESOR) -->
             <div id="screen-register" class="hidden-screen fade-in space-y-4 max-w-md mx-auto">
-                <button onclick="showScreen('screen-login')" class="flex items-center text-gray-400 hover:text-black mb-2 transition hover:-translate-x-1"><i data-lucide="arrow-left" class="w-4 h-4 mr-1"></i> Volver</button>
-                <h2 class="text-xl font-bold text-gray-800">Crear Cuenta</h2>
+                <button onclick="showScreen('screen-login')" class="flex items-center text-gray-400 hover:text-black mb-2"><i data-lucide="arrow-left" class="w-4 h-4 mr-1"></i> Volver</button>
+                <h2 class="text-xl font-bold text-gray-700">Crear Cuenta</h2>
+                
                 <form id="form-register" class="space-y-3" onsubmit="doRegister(event, false)">
-                    <!-- Selector Rol -->
-                    <div class="flex gap-2 mb-2 p-1 bg-gray-200 rounded-xl">
+                    <!-- SELECCIÓN DE ROL -->
+                    <div class="flex gap-2 mb-2">
                         <label class="flex-1 cursor-pointer">
                             <input type="radio" name="rol_tipo" value="ESTUDIANTE" checked class="peer hidden">
-                            <div class="text-center p-2 rounded-lg peer-checked:bg-white peer-checked:text-black peer-checked:shadow-sm text-gray-500 font-bold text-sm transition-all">Estudiante</div>
+                            <div class="text-center p-2 border rounded-lg peer-checked:bg-yellow-400 peer-checked:font-bold peer-checked:border-yellow-400 text-sm transition">Estudiante</div>
                         </label>
                         <label class="flex-1 cursor-pointer">
                             <input type="radio" name="rol_tipo" value="PROFESOR" class="peer hidden">
-                            <div class="text-center p-2 rounded-lg peer-checked:bg-white peer-checked:text-black peer-checked:shadow-sm text-gray-500 font-bold text-sm transition-all">Profesor</div>
+                            <div class="text-center p-2 border rounded-lg peer-checked:bg-black peer-checked:text-white peer-checked:font-bold peer-checked:border-black text-sm transition">Profesor</div>
                         </label>
                     </div>
 
-                    <input type="text" id="reg-nombre" placeholder="Nombre Completo" class="w-full p-3 border border-gray-200 rounded-xl focus:border-yellow-400 outline-none transition" required>
-                    <input type="text" id="reg-codigo" placeholder="Código / Cédula" class="w-full p-3 border border-gray-200 rounded-xl focus:border-yellow-400 outline-none transition" required>
-                    <input type="email" id="reg-email" placeholder="Correo @uniandes.edu.co" class="w-full p-3 border border-gray-200 rounded-xl focus:border-yellow-400 outline-none transition" required>
+                    <input type="text" id="reg-nombre" placeholder="Nombre Completo" class="w-full p-3 border rounded-xl" required>
+                    <input type="text" id="reg-codigo" placeholder="Código / Cédula" class="w-full p-3 border rounded-xl" required>
+                    <input type="email" id="reg-email" placeholder="Correo @uniandes.edu.co" class="w-full p-3 border rounded-xl" required>
                     
-                    <!-- Password con Validación Visual (ARREGLADO: NO TAPA BOTONES) -->
-                    <div class="relative group">
-                        <input type="password" id="reg-pass" placeholder="Contraseña Segura" class="w-full p-3 border border-gray-200 rounded-xl focus:border-yellow-400 outline-none transition" required onkeyup="validatePassword('reg')">
-                        <!-- Quitamos position:absolute para que empuje el contenido hacia abajo -->
-                        <div id="reg-pass-criteria" class="mt-2 text-[10px] grid grid-cols-2 gap-2 hidden bg-white p-3 rounded-xl border border-gray-100 shadow-inner w-full">
-                            <span id="reg-c-len" class="invalid-crit flex items-center"><i data-lucide="circle" class="w-3 h-3 mr-1"></i> 8 a 15 caracteres</span>
+                    <!-- INPUT DE CONTRASEÑA CON VALIDACIÓN -->
+                    <div class="relative">
+                        <input type="password" id="reg-pass" placeholder="Contraseña Segura" class="w-full p-3 border rounded-xl" required onkeyup="validatePassword('reg')">
+                        <!-- Indicadores de Validación -->
+                        <div id="reg-pass-criteria" class="mt-2 text-[10px] grid grid-cols-2 gap-1 hidden bg-white p-2 rounded border">
+                            <span id="reg-c-len" class="invalid-crit flex items-center"><i data-lucide="circle" class="w-3 h-3 mr-1"></i> 8-15 caracteres</span>
                             <span id="reg-c-up" class="invalid-crit flex items-center"><i data-lucide="circle" class="w-3 h-3 mr-1"></i> Mayúscula</span>
                             <span id="reg-c-low" class="invalid-crit flex items-center"><i data-lucide="circle" class="w-3 h-3 mr-1"></i> Minúscula</span>
                             <span id="reg-c-num" class="invalid-crit flex items-center"><i data-lucide="circle" class="w-3 h-3 mr-1"></i> Número</span>
@@ -125,29 +102,29 @@
                     </div>
                     
                     <div class="flex items-start space-x-2 pt-2 px-1">
-                        <input type="checkbox" required class="mt-1 accent-yellow-400 w-4 h-4 cursor-pointer">
-                        <div class="text-xs text-gray-500 leading-tight">Acepto los <a href="#" onclick="showLegal('terms')" class="underline text-black font-bold hover:text-yellow-600">Términos</a> y <a href="#" onclick="showLegal('privacy')" class="underline text-black font-bold hover:text-yellow-600">Política</a>.</div>
+                        <input type="checkbox" required class="mt-1 accent-yellow-400 w-4 h-4">
+                        <div class="text-xs text-gray-500 leading-tight">Acepto los <a href="#" onclick="showLegal('terms')" class="underline text-black font-bold">Términos</a> y <a href="#" onclick="showLegal('privacy')" class="underline text-black font-bold">Política</a>.</div>
                     </div>
-                    <button type="submit" class="w-full bg-yellow-400 font-bold py-3 rounded-xl shadow-md hover:bg-yellow-300 transition transform active:scale-95 text-black">REGISTRARME</button>
+                    <button type="submit" class="w-full bg-yellow-400 font-bold py-3 rounded-xl shadow-md hover:bg-yellow-300">REGISTRARME</button>
                 </form>
             </div>
 
             <!-- 3. REGISTRO REPARTIDOR -->
             <div id="screen-register-courier" class="hidden-screen fade-in space-y-4 max-w-md mx-auto">
-                <button onclick="showScreen('screen-login')" class="flex items-center text-gray-400 hover:text-black mb-2 transition hover:-translate-x-1"><i data-lucide="arrow-left" class="w-4 h-4 mr-1"></i> Volver</button>
-                <h2 class="text-xl font-bold text-gray-800">Aspirante a Domiciliario</h2>
+                <button onclick="showScreen('screen-login')" class="flex items-center text-gray-400 hover:text-black mb-2"><i data-lucide="arrow-left" class="w-4 h-4 mr-1"></i> Volver</button>
+                <h2 class="text-xl font-bold text-gray-700">Aspirante a Domiciliario</h2>
                 <p class="text-xs text-gray-500">Únete al equipo. Tu cuenta quedará en revisión.</p>
                 <form id="form-register-courier" class="space-y-3" onsubmit="doRegister(event, true)">
-                    <input type="text" id="cour-nombre" placeholder="Nombre Completo" class="w-full p-3 border border-gray-200 rounded-xl focus:border-black outline-none transition" required>
-                    <input type="text" id="cour-codigo" placeholder="Código Estudiante" class="w-full p-3 border border-gray-200 rounded-xl focus:border-black outline-none transition" required>
-                    <input type="email" id="cour-email" placeholder="Correo Institucional" class="w-full p-3 border border-gray-200 rounded-xl focus:border-black outline-none transition" required>
-                    <input type="tel" id="cour-celular" placeholder="Celular (Obligatorio)" class="w-full p-3 border border-gray-200 rounded-xl focus:border-black outline-none transition" required>
+                    <input type="text" id="cour-nombre" placeholder="Nombre Completo" class="w-full p-3 border rounded-xl" required>
+                    <input type="text" id="cour-codigo" placeholder="Código Estudiante" class="w-full p-3 border rounded-xl" required>
+                    <input type="email" id="cour-email" placeholder="Correo Institucional" class="w-full p-3 border rounded-xl" required>
+                    <input type="tel" id="cour-celular" placeholder="Celular (Obligatorio)" class="w-full p-3 border rounded-xl" required>
                     
-                    <!-- Password Repartidor (ARREGLADO TAMBIÉN) -->
+                    <!-- INPUT DE CONTRASEÑA CON VALIDACIÓN (REPARTIDOR) -->
                     <div class="relative">
-                        <input type="password" id="cour-pass" placeholder="Contraseña Segura" class="w-full p-3 border border-gray-200 rounded-xl focus:border-black outline-none transition" required onkeyup="validatePassword('cour')">
-                         <div id="cour-pass-criteria" class="mt-2 text-[10px] grid grid-cols-2 gap-2 hidden bg-white p-3 rounded-xl border border-gray-100 shadow-inner w-full">
-                            <span id="cour-c-len" class="invalid-crit flex items-center"><i data-lucide="circle" class="w-3 h-3 mr-1"></i> 8 a 15 caracteres</span>
+                        <input type="password" id="cour-pass" placeholder="Contraseña Segura" class="w-full p-3 border rounded-xl" required onkeyup="validatePassword('cour')">
+                         <div id="cour-pass-criteria" class="mt-2 text-[10px] grid grid-cols-2 gap-1 hidden bg-white p-2 rounded border">
+                            <span id="cour-c-len" class="invalid-crit flex items-center"><i data-lucide="circle" class="w-3 h-3 mr-1"></i> 8-15 caracteres</span>
                             <span id="cour-c-up" class="invalid-crit flex items-center"><i data-lucide="circle" class="w-3 h-3 mr-1"></i> Mayúscula</span>
                             <span id="cour-c-low" class="invalid-crit flex items-center"><i data-lucide="circle" class="w-3 h-3 mr-1"></i> Minúscula</span>
                             <span id="cour-c-num" class="invalid-crit flex items-center"><i data-lucide="circle" class="w-3 h-3 mr-1"></i> Número</span>
@@ -155,110 +132,93 @@
                         </div>
                     </div>
 
-                    <div class="bg-yellow-50 p-3 rounded-xl text-xs text-yellow-800 border border-yellow-100">
-                        <input type="checkbox" required class="mr-2 accent-black"> He leído y acepto el <a href="#" onclick="showLegal('courier_agreement')" class="underline font-bold hover:text-black">Contrato de Colaboración</a>.
+                    <div class="bg-yellow-50 p-3 rounded-lg text-xs text-yellow-800">
+                        <input type="checkbox" required class="mr-2"> He leído y acepto el <a href="#" onclick="showLegal('courier_agreement')" class="underline font-bold">Contrato de Colaboración</a>.
                     </div>
-                    <button type="submit" class="w-full bg-black text-white font-bold py-3 rounded-xl shadow-md hover:bg-gray-800 transition transform active:scale-95">ENVIAR SOLICITUD</button>
+                    <button type="submit" class="w-full bg-black text-white font-bold py-3 rounded-xl shadow-md">ENVIAR SOLICITUD</button>
                 </form>
             </div>
 
             <!-- 4. VERIFICACIÓN -->
             <div id="screen-verify" class="hidden-screen fade-in space-y-6 text-center pt-8 max-w-md mx-auto">
-                <div class="bg-green-100 text-green-600 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner animate-[bounce_2s_infinite]"><i data-lucide="mail" class="w-10 h-10"></i></div>
-                <h2 class="text-2xl font-bold text-gray-800">Verifica tu Correo</h2>
-                <p class="text-sm text-gray-500 px-4">Hemos enviado el código a tu correo institucional.</p>
-                <form id="form-verify" class="space-y-6">
-                    <input type="text" id="verify-code" placeholder="000000" class="w-full text-center text-4xl tracking-[0.3em] font-bold p-4 border-2 border-yellow-400 rounded-2xl focus:outline-none bg-white shadow-sm" maxlength="6" required>
-                    <button type="submit" class="w-full bg-black text-white font-bold py-4 rounded-xl hover:bg-gray-800 transition shadow-lg transform active:scale-95">ACTIVAR CUENTA</button>
+                <h2 class="text-xl font-bold">Verificar</h2>
+                <p class="text-sm text-gray-500">Revisa tu correo.</p>
+                <form id="form-verify" class="space-y-4">
+                    <input type="text" id="verify-code" placeholder="000000" class="w-full text-center text-3xl font-bold p-4 border-2 border-yellow-400 rounded-xl" maxlength="6" required>
+                    <button type="submit" class="w-full bg-black text-white font-bold py-3 rounded-xl">ACTIVAR</button>
                 </form>
             </div>
 
             <!-- PANEL CLIENTE -->
             <div id="client-view" class="hidden-screen">
                 <!-- MENÚ -->
-                <div id="screen-menu" class="space-y-6">
+                <div id="screen-menu" class="space-y-4">
                     <div id="active-orders-section" class="hidden">
-                        <h3 class="font-bold text-gray-800 text-sm mb-3 px-1 flex items-center">
-                            <span class="relative flex h-3 w-3 mr-2"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span></span> En Curso
-                        </h3>
+                        <h3 class="font-bold text-gray-800 text-sm mb-3 px-1 flex items-center">En Curso</h3>
                         <div id="active-orders-container" class="space-y-4"></div>
                     </div>
-                    
-                    <div class="flex justify-between items-end border-b border-gray-200 pb-3 mt-4 sticky top-0 bg-gray-50 z-20 pt-2">
-                        <h2 class="text-xl font-bold text-gray-800">Restaurantes</h2>
-                        <button onclick="loadMyOrders(); showScreen('screen-history')" class="text-xs text-gray-600 font-bold bg-white border border-gray-200 px-3 py-1.5 rounded-full hover:bg-gray-100 flex gap-1 transition shadow-sm"><i data-lucide="history" class="w-3 h-3"></i> Historial</button>
+                    <div class="flex justify-between items-end border-b border-gray-200 pb-2 mt-4">
+                        <h2 class="text-lg font-bold text-gray-700">Restaurantes</h2>
+                        <div class="flex gap-2"><button onclick="loadMyOrders(); showScreen('screen-history')" class="text-xs text-gray-600 font-bold bg-white border px-3 py-1.5 rounded-lg hover:bg-gray-50 flex gap-1"><i data-lucide="history" class="w-3 h-3"></i> Historial</button></div>
                     </div>
-                    <div id="restaurants-container" class="space-y-5 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-6"></div>
+                    <div id="restaurants-container" class="space-y-4 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-6"></div>
                 </div>
 
-                <!-- CHECKOUT -->
+                <!-- CHECKOUT CON PROPINA -->
                 <div id="screen-cart" class="hidden-screen fade-in space-y-4 max-w-lg mx-auto">
-                    <button onclick="showScreen('screen-menu')" class="mb-2 flex items-center text-gray-400 hover:text-black transition"><i data-lucide="chevron-left" class="w-5 h-5"></i> Seguir pidiendo</button>
-                    <h2 class="text-2xl font-bold text-gray-800 mb-4">Tu Pedido</h2>
+                    <button onclick="showScreen('screen-menu')" class="mb-2">Volver</button>
+                    <h2 class="text-xl font-bold">Tu Pedido</h2>
+                    <div id="cart-items" class="bg-white p-4 rounded-xl border"></div>
                     
-                    <div id="cart-items" class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm"></div>
-                    
-                    <div class="space-y-4 pt-4">
-                        <h3 class="font-bold text-sm text-gray-600 uppercase tracking-wide">Opciones de Entrega</h3>
-                        
-                        <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm space-y-4">
-                            <div>
-                                <label class="text-xs text-gray-400 block mb-1 font-bold">JORNADA</label>
-                                <select id="cart-jornada" class="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 text-sm focus:border-yellow-400 focus:outline-none transition">
-                                    <option value="12:00 - 12:45">Almuerzo Temprano (12:00 - 12:45)</option>
-                                    <option value="12:45 - 13:30" selected>Almuerzo Pico (12:45 - 1:30)</option>
-                                    <option value="13:30 - 14:15">Almuerzo Tarde (1:30 - 2:15)</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label class="text-xs text-gray-400 block mb-1 font-bold">PRIORIDAD</label>
-                                <div class="grid grid-cols-3 gap-2">
-                                    <div onclick="selectPriority('NORMAL')" id="prio-NORMAL" class="p-2 border rounded-xl text-center cursor-pointer border-yellow-400 bg-yellow-50 hover:bg-yellow-100 transition"><div class="text-xs font-bold">Normal</div><div class="text-[10px] text-gray-500">$0</div></div>
-                                    <div onclick="selectPriority('PRIORITARIA')" id="prio-PRIORITARIA" class="p-2 border rounded-xl text-center cursor-pointer hover:border-red-400 hover:bg-red-50 transition"><div class="text-xs font-bold text-red-600">⚡ Flash</div><div class="text-[10px] text-gray-500">+$2.000</div></div>
-                                    <div onclick="selectPriority('FLEXIBLE')" id="prio-FLEXIBLE" class="p-2 border rounded-xl text-center cursor-pointer hover:border-green-400 hover:bg-green-50 transition"><div class="text-xs font-bold text-green-600">🐢 Relax</div><div class="text-[10px] text-gray-500">-$1.000</div></div>
-                                </div>
-                                <input type="hidden" id="cart-priority" value="NORMAL">
-                            </div>
+                    <div class="space-y-3 pt-4">
+                        <h3 class="font-bold text-sm text-gray-600">Opciones</h3>
+                        <select id="cart-jornada" class="w-full p-3 border rounded-xl text-sm mb-2">
+                            <option value="12:00 - 12:45">Almuerzo Temprano (12:00 - 12:45)</option>
+                            <option value="12:45 - 13:30" selected>Almuerzo Pico (12:45 - 1:30)</option>
+                            <option value="13:30 - 14:15">Almuerzo Tarde (1:30 - 2:15)</option>
+                        </select>
+                        <div class="grid grid-cols-3 gap-2">
+                            <div onclick="selectPriority('NORMAL')" id="prio-NORMAL" class="p-3 border rounded-xl text-center cursor-pointer border-yellow-400 bg-yellow-50"><div class="text-xs font-bold">Normal</div><div class="text-[10px] text-gray-500">$0</div></div>
+                            <div onclick="selectPriority('PRIORITARIA')" id="prio-PRIORITARIA" class="p-3 border rounded-xl text-center cursor-pointer"><div class="text-xs font-bold text-red-600">⚡ Flash</div><div class="text-[10px] text-gray-500">+$2.000</div></div>
+                            <div onclick="selectPriority('FLEXIBLE')" id="prio-FLEXIBLE" class="p-3 border rounded-xl text-center cursor-pointer"><div class="text-xs font-bold text-green-600">🐢 Relax</div><div class="text-[10px] text-gray-500">-$1.000</div></div>
                         </div>
+                        <input type="hidden" id="cart-priority" value="NORMAL">
 
-                        <h3 class="font-bold text-sm text-gray-600 uppercase tracking-wide mt-6">Destino</h3>
-                        <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm space-y-3">
-                            <select id="cart-edificio" onchange="updateCartUI()" class="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 text-sm focus:border-yellow-400 focus:outline-none transition">
-                                <optgroup label="Zona Base ($2.000)">
-                                    <option value="Edificio ML (Mario Laserna)" data-fee="2000">Edificio ML</option>
-                                    <option value="Edificio W (Wiesner)" data-fee="2000">Edificio W</option>
-                                    <option value="Edificio SD (Santo Domingo)" data-fee="2000">Edificio SD</option>
-                                    <option value="Edificio AU (Aulas)" data-fee="2000">Edificio AU</option>
-                                    <option value="Edificio LL (Lleras)" data-fee="2000">Edificio LL</option>
-                                    <option value="Edificio B (Ingeniería Vieja)" data-fee="2000">Edificio B</option>
-                                    <option value="Edificio O (Administrativo)" data-fee="2000">Edificio O</option>
-                                    <option value="Edificio RG (Rectoría)" data-fee="2000">Edificio RG</option>
-                                </optgroup>
-                                <optgroup label="Zona Subida ($3.000)">
-                                    <option value="Edificio C (Arquitectura)" data-fee="3000">Edificio C</option>
-                                    <option value="Edificio TX (Talleres)" data-fee="3000">Edificio TX</option>
-                                    <option value="Edificio G (Sociales)" data-fee="3000">Edificio G</option>
-                                    <option value="Edificio H (Matemáticas)" data-fee="3000">Edificio H</option>
-                                    <option value="Edificio Q (Química)" data-fee="3000">Edificio Q</option>
-                                    <option value="Edificio IP (Física)" data-fee="3000">Edificio IP</option>
-                                    <option value="Edificio K" data-fee="3000">Edificio K</option>
-                                    <option value="Edificio Ñ" data-fee="3000">Edificio Ñ</option>
-                                    <option value="Edificio RGA (Pedro Navas)" data-fee="3000">Edificio RGA</option>
-                                </optgroup>
-                                <optgroup label="Zona Excursión ($4.000)">
-                                    <option value="Centro Deportivo (La Gata)" data-fee="4000">Centro Deportivo</option>
-                                    <option value="Bloque S1 (Arte)" data-fee="4000">Bloque S1</option>
-                                    <option value="Edificio Fenicia" data-fee="4000">Edificio Fenicia</option>
-                                    <option value="Torre CityU" data-fee="4000">Torre CityU</option>
-                                    <option value="Edificio Séneca" data-fee="4000">Edificio Séneca</option>
-                                    <option value="La Caneca" data-fee="4000">La Caneca</option>
-                                </optgroup>
-                            </select>
-                            <input type="text" id="cart-salon" placeholder="Detalle (Ej: Piso 5, salón 304)" class="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 text-sm focus:border-yellow-400 focus:outline-none transition" required>
-                        </div>
+                        <h3 class="font-bold text-sm text-gray-600 mt-4">Ubicación</h3>
+                        <select id="cart-edificio" onchange="updateCartUI()" class="w-full p-3 border rounded-xl text-sm">
+                            <optgroup label="Zona Base ($2.000)">
+                                <option value="Edificio ML (Mario Laserna)" data-fee="2000">Edificio ML</option>
+                                <option value="Edificio W (Wiesner)" data-fee="2000">Edificio W</option>
+                                <option value="Edificio SD (Santo Domingo)" data-fee="2000">Edificio SD</option>
+                                <option value="Edificio AU (Aulas)" data-fee="2000">Edificio AU</option>
+                                <option value="Edificio LL (Lleras)" data-fee="2000">Edificio LL</option>
+                                <option value="Edificio B (Ingeniería Vieja)" data-fee="2000">Edificio B</option>
+                                <option value="Edificio O (Administrativo)" data-fee="2000">Edificio O</option>
+                                <option value="Edificio RG (Rectoría)" data-fee="2000">Edificio RG</option>
+                            </optgroup>
+                            <optgroup label="Zona Subida ($3.000)">
+                                <option value="Edificio C (Arquitectura)" data-fee="3000">Edificio C</option>
+                                <option value="Edificio TX (Talleres)" data-fee="3000">Edificio TX</option>
+                                <option value="Edificio G (Sociales)" data-fee="3000">Edificio G</option>
+                                <option value="Edificio H (Matemáticas)" data-fee="3000">Edificio H</option>
+                                <option value="Edificio Q (Química)" data-fee="3000">Edificio Q</option>
+                                <option value="Edificio IP (Física)" data-fee="3000">Edificio IP</option>
+                                <option value="Edificio K" data-fee="3000">Edificio K</option>
+                                <option value="Edificio Ñ" data-fee="3000">Edificio Ñ</option>
+                                <option value="Edificio RGA (Pedro Navas)" data-fee="3000">Edificio RGA</option>
+                            </optgroup>
+                            <optgroup label="Zona Excursión ($4.000)">
+                                <option value="Centro Deportivo (La Gata)" data-fee="4000">Centro Deportivo</option>
+                                <option value="Bloque S1 (Arte)" data-fee="4000">Bloque S1</option>
+                                <option value="Edificio Fenicia" data-fee="4000">Edificio Fenicia</option>
+                                <option value="Torre CityU" data-fee="4000">Torre CityU</option>
+                                <option value="Edificio Séneca" data-fee="4000">Edificio Séneca</option>
+                                <option value="La Caneca" data-fee="4000">La Caneca</option>
+                            </optgroup>
+                        </select>
+                        <input type="text" id="cart-salon" placeholder="Detalle (Ej: Piso 5, salón 304)" class="w-full p-3 border rounded-xl text-sm" required>
                         
-                        <h3 class="font-bold text-sm text-gray-600 uppercase tracking-wide mt-6">Propina ❤️</h3>
+                        <h3 class="font-bold text-sm text-gray-600 mt-4">Propina ❤️</h3>
                         <div class="grid grid-cols-4 gap-2">
                             <button onclick="setTip(0)" id="tip-0" class="tip-btn bg-black text-white p-3 rounded-xl text-xs font-bold transition">No</button>
                             <button onclick="setTip(1000)" id="tip-1000" class="tip-btn bg-gray-200 text-gray-600 p-3 rounded-xl text-xs font-bold hover:bg-gray-300 transition">$1k</button>
@@ -328,11 +288,14 @@
                 <div id="modal-content" class="space-y-4 mb-6 max-h-64 overflow-y-auto pr-2"></div>
                 <button id="btn-cancel-order" class="w-full border-2 border-red-100 text-red-500 font-bold py-3 rounded-2xl hover:bg-red-50 transition hidden">Cancelar Pedido</button>
                 <p id="msg-cancel-locked" class="text-xs text-gray-400 text-center mt-2 hidden">No se puede cancelar</p>
+                <!-- BOTÓN WHATSAPP -->
+                <a id="btn-whatsapp-courier" href="#" target="_blank" class="w-full bg-green-500 text-white font-bold py-3 rounded-2xl hover:bg-green-600 transition mt-3 flex items-center justify-center gap-2 hidden">
+                    <i data-lucide="message-circle" class="w-5 h-5"></i> Contactar Repartidor
+                </a>
                 <div class="mt-4 pt-4 border-t text-center"><p class="text-[10px] text-gray-400"><a href="#" onclick="showLegal('cancellation')" class="underline font-bold text-gray-500">Políticas de Cancelación</a></p></div>
             </div>
         </div>
 
-        <!-- MODAL CONFIRMACIÓN -->
         <div id="modal-confirm" class="hidden fixed inset-0 bg-black/60 z-[60] flex justify-center items-center backdrop-blur-sm">
             <div class="bg-white w-80 rounded-3xl p-8 text-center scale-in shadow-2xl">
                 <div class="bg-yellow-100 text-yellow-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce"><i data-lucide="alert-circle" class="w-8 h-8"></i></div>
@@ -535,7 +498,7 @@
         function selectPriority(type) { document.getElementById('cart-priority').value = type; ['NORMAL', 'PRIORITARIA', 'FLEXIBLE'].forEach(t => { document.getElementById('prio-'+t).classList.remove('border-yellow-400', 'bg-yellow-50'); }); document.getElementById('prio-'+type).classList.add('border-yellow-400', 'bg-yellow-50'); updateCartUI(); }
         function addToCart(id, nombre, precio, qty=1) { const existing = cart.find(item => item.id === id); if (existing) existing.cantidad += qty; else cart.push({ id, nombre, precio, cantidad: qty }); updateCartUI(); showToast(`+${qty} ${nombre}`); }
         function updateQuantity(id, change) { const item = cart.find(i => i.id === id); if (item) { item.cantidad += change; if (item.cantidad <= 0) { cart = cart.filter(i => i.id !== id); showToast("Eliminado"); } updateCartUI(); } }
-        function updateCartUI() { const totalFood = cart.reduce((s,i)=>s+(i.precio*i.cantidad),0); const count = cart.reduce((s,i)=>s+i.cantidad,0); const selectEdificio = document.getElementById('cart-edificio'); const deliveryFee = parseInt(selectEdificio.options[selectEdificio.selectedIndex]?.getAttribute('data-fee') || 2000); const priority = document.getElementById('cart-priority').value; let priorityFee = 0; if (priority === 'PRIORITARIA') priorityFee = 2000; if (priority === 'FLEXIBLE') priorityFee = -1000; const tip = parseInt(document.getElementById('cart-tip').value || 0); const total = totalFood + deliveryFee + priorityFee + tip; document.getElementById('cart-count').innerText = count; document.getElementById('cart-total').innerText = '$' + total.toLocaleString(); document.getElementById('summary-food').innerText = '$' + totalFood.toLocaleString(); document.getElementById('summary-delivery').innerText = '$' + deliveryFee.toLocaleString(); let prioText = "$0"; if(priorityFee > 0) prioText = "+$" + priorityFee.toLocaleString(); if(priorityFee < 0) prioText = "-$" + Math.abs(priorityFee).toLocaleString(); document.getElementById('summary-priority').innerText = prioText; document.getElementById('summary-tip').innerText = '$' + tip.toLocaleString(); document.getElementById('cart-total-final').innerText = '$' + total.toLocaleString(); if (count > 0 && !document.getElementById('screen-cart').classList.contains('hidden-screen')) { } else if (count > 0) { document.getElementById('cart-float').classList.remove('hidden'); } const container = document.getElementById('cart-items'); container.innerHTML = ''; cart.forEach(item => { container.innerHTML += `<div class="flex justify-between items-center border-b border-gray-50 pb-2 mb-2"><div class="flex-1"><p class="font-bold text-sm">${item.nombre}</p><div class="flex items-center gap-2 mt-1"><button onclick="updateQuantity(${item.id}, -1)" class="w-6 h-6 bg-gray-200 rounded-full font-bold">-</button><span class="text-xs font-bold w-4 text-center">${item.cantidad}</span><button onclick="updateQuantity(${item.id}, 1)" class="w-6 h-6 bg-yellow-400 rounded-full font-bold">+</button></div></div><div class="text-right"><span class="font-bold text-sm block">$${(item.precio*item.cantidad).toLocaleString()}</span><p class="text-[10px] text-gray-400">$${item.precio.toLocaleString()} c/u</p></div></div>`; }); }
+        function updateCartUI() { const totalFood = cart.reduce((s,i)=>s+(i.precio*i.cantidad),0); const count = cart.reduce((s,i)=>s+i.cantidad,0); const selectEdificio = document.getElementById('cart-edificio'); const deliveryFee = parseInt(selectEdificio.options[selectEdificio.selectedIndex]?.getAttribute('data-fee') || 2000); const priority = document.getElementById('cart-priority').value; let priorityFee = 0; if (priority === 'PRIORITARIA') priorityFee = 2000; if (priority === 'FLEXIBLE') priorityFee = -1000; const tip = parseInt(document.getElementById('cart-tip').value || 0); const total = totalFood + deliveryFee + priorityFee + tip; document.getElementById('cart-count').innerText = count; document.getElementById('cart-total').innerText = '$' + total.toLocaleString(); document.getElementById('summary-food').innerText = '$' + totalFood.toLocaleString(); document.getElementById('summary-delivery').innerText = '$' + deliveryFee.toLocaleString(); let prioText = "$0"; if(priorityFee > 0) prioText = "+$" + priorityFee.toLocaleString(); if(priorityFee < 0) prioText = "-$" + Math.abs(priorityFee).toLocaleString(); document.getElementById('summary-priority').innerText = prioText; document.getElementById('summary-tip').innerText = '$' + tip.toLocaleString(); document.getElementById('cart-total-final').innerText = '$' + total.toLocaleString(); if (count > 0 && !document.getElementById('screen-cart').classList.contains('hidden-screen')) { } else if (count > 0) { document.getElementById('cart-float').classList.remove('hidden'); } const container = document.getElementById('cart-items'); container.innerHTML = ''; cart.forEach(item => { container.innerHTML += `<div class="flex justify-between items-center border-b border-gray-50 last:border-0 pb-3 last:pb-0"><div class="flex-1"><p class="font-bold text-sm">${item.nombre}</p><div class="flex items-center gap-2 mt-1"><button onclick="updateQuantity(${item.id}, -1)" class="w-6 h-6 bg-gray-200 rounded-full font-bold">-</button><span class="text-xs font-bold w-4 text-center">${item.cantidad}</span><button onclick="updateQuantity(${item.id}, 1)" class="w-6 h-6 bg-yellow-400 rounded-full font-bold">+</button></div></div><div class="text-right"><span class="font-bold text-sm block">$${(item.precio*item.cantidad).toLocaleString()}</span><p class="text-[10px] text-gray-400">$${item.precio.toLocaleString()} c/u</p></div></div>`; }); }
         
         function previewFile() { const file = document.getElementById('cart-comprobante').files[0]; if (file) document.getElementById('file-preview').innerHTML = `<span class="text-green-500 font-bold text-sm flex items-center"><i data-lucide="check-circle" class="w-4 h-4 mr-1"></i> ${file.name.substring(0,10)}...</span>`; lucide.createIcons(); }
         async function apiCall(url, method, body, isFormData) { const headers = {}; let token = getCookie('csrftoken'); if(token) headers['X-CSRFToken']=token; if(!isFormData) headers['Content-Type']='application/json'; const config = { method, headers }; if (body && method !== 'GET' && method !== 'DELETE') config.body = isFormData ? body : JSON.stringify(body); const response = await fetch(url, config); if(method === 'DELETE' && response.status === 204) return {}; const data = await response.json(); if (!response.ok) throw new Error(data.error || JSON.stringify(data)); return data; }
@@ -551,7 +514,7 @@
                 const showList = (type === 'pool') ? pool : mine;
                 if (showList.length === 0) container.innerHTML = '<div class="col-span-full text-center text-gray-400">No hay pedidos.</div>';
                 showList.forEach(p => {
-                    let actionBtn = type === 'pool' ? `<button onclick="acceptOrder(${p.id})" class="w-full bg-black text-white font-bold py-2 rounded-lg">🖐️ Aceptar</button>` : (p.estado==='EN_CAMINO' ? `<button onclick="deliverOrder(${p.id})" class="w-full bg-green-500 text-white font-bold py-2 rounded-lg">✅ Entregado</button>` : '');
+                    let actionBtn = type === 'pool' ? `<button onclick="acceptOrder(${p.id})" class="w-full bg-black text-white font-bold py-2 rounded-lg">🖐️ Aceptar</button>` : (p.estado==='EN_CAMINO' ? `<div class="flex gap-2"><a href="https://wa.me/57${p.cliente_info.celular}" target="_blank" class="flex-1 bg-green-500 text-white font-bold py-2 rounded-lg flex justify-center items-center gap-1"><i data-lucide="message-circle" class="w-4 h-4"></i> Chat</a><button onclick="deliverOrder(${p.id})" class="flex-1 bg-black text-white font-bold py-2 rounded-lg">✅ Entregado</button></div>` : '');
                     let itemsHtml = p.items.map(i => `<span class="text-xs bg-gray-100 px-2 py-1 rounded">${i.cantidad}x ${i.nombre_producto}</span>`).join(' ');
                     container.innerHTML += `<div class="bg-white p-4 rounded-xl border shadow-sm flex flex-col gap-3"><div class="flex justify-between items-start"><div><span class="font-bold text-lg">#${p.id}</span><span class="text-xs bg-yellow-100 px-2 py-1 rounded-full ml-2">${p.jornada_entrega}</span></div><span class="font-bold text-green-600">$${parseInt(p.total_pagar).toLocaleString()}</span></div><div class="text-sm text-gray-600"><p class="font-bold"><i data-lucide="map-pin" class="w-3 h-3 inline"></i> ${p.edificio_entrega}</p><p class="text-xs">${p.detalle_ubicacion}</p></div><div class="flex flex-wrap gap-1">${itemsHtml}</div>${actionBtn}</div>`;
                 }); lucide.createIcons(); } catch(e) {} finally { toggleLoading(false); }
@@ -562,6 +525,15 @@
         document.getElementById('form-login').addEventListener('submit', async (e) => { e.preventDefault(); toggleLoading(true); try { const res = await fetch('/api/auth/login/', { method: 'POST', headers: {'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN}, body: JSON.stringify({email: document.getElementById('login-email').value, password: document.getElementById('login-password').value}) }); const json = await res.json(); if (res.ok) { document.getElementById('user-name').innerText = json.nombre; document.getElementById('user-role-label').innerText = json.rol; userRole = json.rol; document.getElementById('user-info').classList.remove('hidden'); document.getElementById('btn-logout').classList.remove('hidden'); showScreen('screen-menu'); } else showToast(json.error, true); } catch (e) { showToast('Error red', true); } finally { toggleLoading(false); } });
         document.getElementById('form-register').addEventListener('submit', async (e) => { e.preventDefault(); toggleLoading(true); try { await apiCall('/api/auth/registro/', 'POST', {email:document.getElementById('reg-email').value, password:document.getElementById('reg-pass').value, nombre_completo:document.getElementById('reg-nombre').value, codigo_estudiante:document.getElementById('reg-codigo').value, celular:document.getElementById('reg-celular').value}); showToast('Código enviado!'); showScreen('screen-verify'); } catch(e){ showToast(e.message, true); } finally{ toggleLoading(false); } });
         document.getElementById('form-verify').addEventListener('submit', async (e) => { e.preventDefault(); toggleLoading(true); try { await apiCall('/api/auth/verificar/', 'POST', {email:document.getElementById('reg-email').value||document.getElementById('login-email').value, codigo:document.getElementById('verify-code').value}); showToast('Verificado!'); showScreen('screen-login'); } catch(e){ showToast(e.message, true); } finally{ toggleLoading(false); } });
+        async function loadMenu() { try { const data = await apiCall('/api/restaurantes/', 'GET'); const div=document.getElementById('restaurants-container'); div.innerHTML=''; if(data.length===0){div.innerHTML='<p class="text-center text-gray-400 col-span-full">Sin restaurantes</p>';return;} data.forEach(r=>{ let h=`<div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 transition hover:shadow-xl flex flex-col h-full"><div class="flex justify-between mb-4 border-b border-gray-50 pb-2"><h3 class="font-bold text-lg">${r.nombre}</h3><span class="text-xs bg-gray-100 px-2 py-1 rounded-full">${r.ubicacion_local}</span></div><div class="space-y-3 flex-1">`; r.productos.forEach(p=>{ h+=`<div onclick="addToCart(${p.id}, '${p.nombre}', ${parseInt(p.precio)})" class="flex justify-between items-center p-2 hover:bg-yellow-50 rounded-xl cursor-pointer transition group"><div class="flex-1 pr-2"><p class="font-bold text-sm group-hover:text-black">${p.nombre}</p><p class="text-xs text-gray-400 line-clamp-1">${p.descripcion||''}</p></div><div class="flex items-center gap-2"><span class="font-bold text-sm">$${parseInt(p.precio).toLocaleString()}</span><button class="bg-black text-white w-7 h-7 rounded-full flex items-center justify-center shadow"><i data-lucide="plus" class="w-4 h-4"></i></button></div></div>`; }); h+=`</div></div>`; div.innerHTML+=h; }); lucide.createIcons(); } catch(e){ showToast('Error menú', true); } }
+        async function doLogout(){ tryLogout(); }
+        function openModal(itemsJson, orderId, status, jornada, courierPhone) { const items = (typeof itemsJson === 'string') ? JSON.parse(itemsJson) : itemsJson; const container = document.getElementById('modal-content'); container.innerHTML = ''; items.forEach(i => { container.innerHTML += `<div class="flex justify-between border-b border-gray-50 pb-2"><span class="text-sm font-bold text-gray-700">${i.cantidad}x ${i.nombre_producto}</span><span class="text-sm text-gray-500">$${parseInt(i.precio_unitario).toLocaleString()}</span></div>`; }); const now = new Date(); let limitHour = 11; let limitMin = 30; if (jornada) { const startTimeStr = jornada.split('-')[0].trim(); const [h, m] = startTimeStr.split(':').map(Number); const startDate = new Date(); startDate.setHours(h, m, 0, 0); startDate.setMinutes(startDate.getMinutes() - 30); limitHour = startDate.getHours(); limitMin = startDate.getMinutes(); } const btnCancel = document.getElementById('btn-cancel-order'); const msgLocked = document.getElementById('msg-cancel-locked'); const btnWhatsapp = document.getElementById('btn-whatsapp-courier'); const isBeforeLimit = now.getHours() < limitHour || (now.getHours() === limitHour && now.getMinutes() < limitMin); if ((status === 'PENDIENTE' || status === 'VERIFICANDO') && isBeforeLimit) { btnCancel.classList.remove('hidden'); msgLocked.classList.add('hidden'); btnCancel.onclick = () => tryCancelOrder(orderId); } else { btnCancel.classList.add('hidden'); msgLocked.classList.remove('hidden'); if(status !== 'PENDIENTE') msgLocked.innerText = "Ya está en cocina."; else msgLocked.innerText = `Límite: ${limitHour}:${limitMin < 10 ? '0'+limitMin : limitMin}`; } if (status === 'EN_CAMINO' && courierPhone) { btnWhatsapp.classList.remove('hidden'); btnWhatsapp.href = `https://wa.me/57${courierPhone}`; } else { btnWhatsapp.classList.add('hidden'); } document.getElementById('modal-order-detail').classList.remove('hidden'); }
+        function closeModal() { document.getElementById('modal-order-detail').classList.add('hidden'); }
+        async function tryCancelOrder(id) { customConfirm("¿Cancelar?", "No habrá reembolso.", async () => { toggleLoading(true); try { await apiCall(`/api/pedidos/${id}/`, 'DELETE'); closeModal(); showToast("Cancelado"); loadActiveOrders(); } catch(e) { closeModal(); showToast("Eliminado"); loadActiveOrders(); } finally { toggleLoading(false); } }); }
+        async function loadActiveOrders() { try { const data = await apiCall('/api/pedidos/', 'GET'); const container = document.getElementById('active-orders-container'); const section = document.getElementById('active-orders-section'); const active = data.filter(p => p.estado !== 'ENTREGADO' && p.estado !== 'CANCELADO'); if (active.length === 0) { section.classList.add('hidden'); return; } section.classList.remove('hidden'); container.innerHTML = ''; active.forEach(p => { let phase = 1; let label = "Confirmado"; if(p.estado === 'PENDIENTE' || p.estado === 'VERIFICANDO') { phase = 1; label = "Confirmado"; } else if(p.estado === 'EN_COCINA') { phase = 2; label = "En Cocina"; } else if(p.estado === 'EN_CAMINO') { phase = 3; label = "En Camino"; } else if(p.estado === 'ENTREGADO') { phase = 4; label = "Entregado"; } const b1 = phase >= 1 ? 'bg-green-500' : 'bg-gray-200'; const b2 = phase >= 2 ? 'bg-green-500' : 'bg-gray-200'; const b3 = phase >= 3 ? 'bg-green-500' : 'bg-gray-200'; const b4 = phase >= 4 ? 'bg-green-500' : 'bg-gray-200'; const itemsString = JSON.stringify(p.items).replace(/"/g, '&quot;'); const courierPhone = p.repartidor_info ? p.repartidor_info.celular : ''; container.innerHTML += `<div onclick="openModal(${itemsString}, ${p.id}, '${p.estado}', '${p.jornada_entrega}', '${courierPhone}')" class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm transition-all hover:shadow-md cursor-pointer relative overflow-hidden"><div class="flex justify-between items-center mb-3"><div class="flex items-center gap-2"><div class="bg-black text-yellow-400 p-1.5 rounded-lg"><i data-lucide="package" class="w-4 h-4"></i></div><div><p class="font-bold text-sm text-gray-800">Pedido #${p.id}</p><p class="text-xs text-gray-500 font-medium">${label}</p></div></div><span class="font-bold text-sm bg-gray-50 px-2 py-1 rounded text-gray-700">$${parseInt(p.total_pagar).toLocaleString()}</span></div><div class="flex gap-1 h-1.5 mb-2"><div class="flex-1 rounded-full ${b1}"></div><div class="flex-1 rounded-full ${b2}"></div><div class="flex-1 rounded-full ${b3}"></div><div class="flex-1 rounded-full ${b4}"></div></div><div class="flex items-center text-xs text-gray-500"><i data-lucide="map-pin" class="w-3 h-3 mr-1 text-red-400"></i>Llega a: ${p.edificio_entrega}</div></div>`; }); lucide.createIcons(); } catch(e) {} }
+        async function loadMyOrders() { toggleLoading(true); try { const data = await apiCall('/api/pedidos/', 'GET'); const c=document.getElementById('history-container'); c.innerHTML=''; if(data.length===0)c.innerHTML='<p class="text-center text-gray-400">No tienes pedidos anteriores.</p>'; data.forEach(p=>{ const s=JSON.stringify(p.items).replace(/"/g,'&quot;'); c.innerHTML+=`<div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm mb-3"><div class="flex justify-between mb-2"><span class="font-bold">#${p.id}</span><span class="text-xs bg-gray-100 px-2 py-1 rounded">${p.estado}</span></div><p class="text-sm text-gray-600 mb-1"><i data-lucide="map-pin" class="w-3 h-3 inline mr-1"></i> ${p.edificio_entrega}</p><p class="text-xs text-gray-400 mb-3">${new Date(p.fecha_creacion).toLocaleString()}</p><div class="border-t pt-2 flex justify-between"><span class="font-bold">$${parseInt(p.total_pagar).toLocaleString()}</span><button onclick="reorder(${s})" class="text-xs bg-black text-white px-2 py-1 rounded">Repetir</button></div></div>`; }); } catch(e){} finally{ toggleLoading(false); } }
+        function reorder(items){ try{ const it = (typeof items === 'string') ? JSON.parse(items) : items; it.forEach(i=>addToCart(i.producto, i.nombre_producto, parseFloat(i.precio_unitario), i.cantidad)); showToast("Items agregados!"); showScreen('screen-cart'); }catch(e){} }
+        async function tryLogout(){ customConfirm("¿Cerrar Sesión?", "Tendrás que ingresar tus datos de nuevo.", async () => { try { await apiCall('/api/auth/logout/', 'POST'); location.reload(); } catch(e){} }); }
         async function loadMenu() { try { const data = await apiCall('/api/restaurantes/', 'GET'); const div=document.getElementById('restaurants-container'); div.innerHTML=''; if(data.length===0){div.innerHTML='<p class="text-center text-gray-400 col-span-full">Sin restaurantes</p>';return;} data.forEach(r=>{ let h=`<div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 transition hover:shadow-xl flex flex-col h-full"><div class="flex justify-between mb-4 border-b border-gray-50 pb-2"><h3 class="font-bold text-lg">${r.nombre}</h3><span class="text-xs bg-gray-100 px-2 py-1 rounded-full">${r.ubicacion_local}</span></div><div class="space-y-3 flex-1">`; r.productos.forEach(p=>{ h+=`<div onclick="addToCart(${p.id}, '${p.nombre}', ${parseInt(p.precio)})" class="flex justify-between items-center p-2 hover:bg-yellow-50 rounded-xl cursor-pointer transition group"><div class="flex-1 pr-2"><p class="font-bold text-sm group-hover:text-black">${p.nombre}</p><p class="text-xs text-gray-400 line-clamp-1">${p.descripcion||''}</p></div><div class="flex items-center gap-2"><span class="font-bold text-sm">$${parseInt(p.precio).toLocaleString()}</span><button class="bg-black text-white w-7 h-7 rounded-full flex items-center justify-center shadow"><i data-lucide="plus" class="w-4 h-4"></i></button></div></div>`; }); h+=`</div></div>`; div.innerHTML+=h; }); lucide.createIcons(); } catch(e){ showToast('Error menú', true); } }
     </script>
 </body>

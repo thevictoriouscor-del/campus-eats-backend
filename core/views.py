@@ -46,15 +46,14 @@ TARIFAS_DOMICILIO = {
 TARIFA_DEFAULT = 3000 # Si ponen un edificio raro, cobramos promedio
 
 # -----------------------------------------------------------------------------
-# 0. VISTAS PRINCIPALES
+# 0. VISTAS PRINCIPALES (Landing y App)
 # -----------------------------------------------------------------------------
-
-# NUEVA: La página corporativa (Raíz)
 def landing_page(request):
+    """Muestra la página corporativa de bienvenida"""
     return render(request, 'landing.html')
 
-# ANTES HOME, AHORA WEBAPP: La aplicación funcional
 def webapp(request):
+    """Muestra la aplicación funcional (Amarilla)"""
     return render(request, 'index.html')
 
 # -----------------------------------------------------------------------------
@@ -123,9 +122,15 @@ class PedidoViewSet(viewsets.ModelViewSet):
 
     # --- CREACIÓN DE PEDIDO (Calculadora de Costos) ---
     def create(self, request, *args, **kwargs):
-        # 1. Parche para leer items desde FormData
+        # 1. Parche para leer items desde FormData (cuando hay foto)
         items_raw = request.data.get('items', '[]')
-        items_data = json.loads(items_raw) if isinstance(items_raw, str) else items_raw
+        if isinstance(items_raw, str):
+            try:
+                items_data = json.loads(items_raw)
+            except json.JSONDecodeError:
+                items_data = []
+        else:
+            items_data = items_raw
 
         # 2. Calcular Tarifa Dinámica según Edificio
         edificio = request.data.get('edificio_entrega', '')
@@ -134,13 +139,18 @@ class PedidoViewSet(viewsets.ModelViewSet):
         # --- LÓGICA DE PRIORIDAD ---
         tipo_entrega = request.data.get('tipo_entrega', 'NORMAL')
         costo_extra = 0
-        if tipo_entrega == 'PRIORITARIA': costo_extra = 2000
-        elif tipo_entrega == 'FLEXIBLE': costo_extra = -1000
+        if tipo_entrega == 'PRIORITARIA':
+            costo_extra = 2000
+        elif tipo_entrega == 'FLEXIBLE':
+            costo_extra = -1000
             
         costo_domicilio_total = costo_domicilio_base + costo_extra
         
         # PROCESAR PROPINA
-        propina = int(request.data.get('propina', 0))
+        try:
+            propina = int(request.data.get('propina', 0))
+        except (ValueError, TypeError):
+            propina = 0
         
         total_comida = 0
         productos_validos = []
@@ -163,6 +173,7 @@ class PedidoViewSet(viewsets.ModelViewSet):
         total_final = total_comida + costo_domicilio_total + propina
 
         # 4. Crear el Pedido con los precios corregidos
+        # Usamos un diccionario nuevo para forzar nuestros valores calculados
         datos_pedido = request.data.copy()
         datos_pedido['total_pagar'] = total_final
         datos_pedido['costo_domicilio'] = costo_domicilio_total
@@ -229,9 +240,26 @@ class RegistroView(APIView):
         if serializer.is_valid():
             user = serializer.save() 
             codigo = user.generar_codigo_verificacion()
-            print(f"\n{'='*40}\n📧 EMAIL: {user.email}\n🔑 CÓDIGO: {codigo}\n{'='*40}\n")
-            send_mail('Tu código', f'Código: {codigo}', 'admin@uniandes.co', [user.email], fail_silently=False)
+            
+            # --- BLINDAJE DE CORREO (Try-Except) ---
+            # Imprimimos en consola por si falla el correo real
+            print(f"\n{'='*40}\n📧 INTENTO EMAIL A: {user.email}\n🔑 CÓDIGO DE RESPALDO: {codigo}\n{'='*40}\n")
+            
+            try:
+                # OJO: Cambia el remitente si usas otro correo
+                send_mail(
+                    'Tu código de verificación - Uniandes Eats',
+                    f'Hola {user.nombre_completo}, bienvenido a Uniandes Eats.\n\nTu código es: {codigo}',
+                    'contacto@andeseats.com', 
+                    [user.email],
+                    fail_silently=False,
+                )
+            except Exception as e:
+                print(f"❌ ERROR CRÍTICO ENVIANDO CORREO: {e}")
+                # No retornamos error al usuario para no bloquear el registro
+            
             return Response({"mensaje": "Usuario creado.", "email": user.email}, status=status.HTTP_201_CREATED)
+        
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class VerificacionView(APIView):
@@ -252,5 +280,5 @@ class VerificacionView(APIView):
                 user.save()
                 return Response({"mensaje": "Verificado"}, status=status.HTTP_200_OK)
             else:
-                return Response({"error": "Código mal"}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"error": "Código incorrecto"}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
