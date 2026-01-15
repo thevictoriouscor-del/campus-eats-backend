@@ -43,17 +43,15 @@ TARIFAS_DOMICILIO = {
     'Edificio Séneca': 4000,
     'La Caneca': 4000
 }
-TARIFA_DEFAULT = 3000 # Si ponen un edificio raro, cobramos promedio
+TARIFA_DEFAULT = 3000
 
 # -----------------------------------------------------------------------------
-# 0. VISTAS PRINCIPALES (Landing y App)
+# 0. VISTAS PRINCIPALES
 # -----------------------------------------------------------------------------
 def landing_page(request):
-    """Muestra la página corporativa de bienvenida"""
     return render(request, 'landing.html')
 
 def webapp(request):
-    """Muestra la aplicación funcional (Amarilla)"""
     return render(request, 'index.html')
 
 # -----------------------------------------------------------------------------
@@ -100,7 +98,7 @@ class PedidoViewSet(viewsets.ModelViewSet):
         if pedido.repartidor is not None:
             return Response({'error': 'Este pedido ya lo tomó alguien más'}, status=400)
             
-        # Validar límite de carga (máximo 3 pedidos activos)
+        # Validar límite de carga
         pedidos_activos = Pedido.objects.filter(repartidor=user, estado='EN_CAMINO').count()
         if pedidos_activos >= 3:
             return Response({'error': '¡Tienes 3 pedidos activos! Entrega uno antes de tomar más.'}, status=400)
@@ -120,9 +118,9 @@ class PedidoViewSet(viewsets.ModelViewSet):
         pedido.save()
         return Response({'status': 'Pedido entregado, buen trabajo!'}, status=200)
 
-    # --- CREACIÓN DE PEDIDO (Calculadora de Costos) ---
+    # --- CREACIÓN DE PEDIDO ---
     def create(self, request, *args, **kwargs):
-        # 1. Parche para leer items desde FormData (cuando hay foto)
+        # 1. Parche para leer items desde FormData
         items_raw = request.data.get('items', '[]')
         if isinstance(items_raw, str):
             try:
@@ -132,7 +130,7 @@ class PedidoViewSet(viewsets.ModelViewSet):
         else:
             items_data = items_raw
 
-        # 2. Calcular Tarifa Dinámica según Edificio
+        # 2. Calcular Tarifa Dinámica
         edificio = request.data.get('edificio_entrega', '')
         costo_domicilio_base = TARIFAS_DOMICILIO.get(edificio, TARIFA_DEFAULT)
         
@@ -155,7 +153,7 @@ class PedidoViewSet(viewsets.ModelViewSet):
         total_comida = 0
         productos_validos = []
 
-        # 3. Validar precios de comida (Anti-hackers)
+        # 3. Validar precios
         for item in items_data:
             try:
                 prod_db = Producto.objects.get(id=item['id_producto'])
@@ -172,8 +170,7 @@ class PedidoViewSet(viewsets.ModelViewSet):
 
         total_final = total_comida + costo_domicilio_total + propina
 
-        # 4. Crear el Pedido con los precios corregidos
-        # Usamos un diccionario nuevo para forzar nuestros valores calculados
+        # 4. Crear el Pedido
         datos_pedido = request.data.copy()
         datos_pedido['total_pagar'] = total_final
         datos_pedido['costo_domicilio'] = costo_domicilio_total
@@ -201,7 +198,7 @@ class PedidoViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 # -----------------------------------------------------------------------------
-# VISTAS DE AUTENTICACIÓN (LOGIN, ETC)
+# VISTAS DE AUTENTICACIÓN
 # -----------------------------------------------------------------------------
 class LoginView(APIView):
     permission_classes = [] 
@@ -212,12 +209,10 @@ class LoginView(APIView):
         
         if user is not None:
             if user.is_active:
-                # Validar aspirantes pendientes
                 if user.rol == 'ASPIRANTE':
-                    return Response({"error": "Tu solicitud de domiciliario está en revisión por la administración."}, status=403)
+                    return Response({"error": "Tu solicitud de domiciliario está en revisión."}, status=403)
                 
                 login(request, user)
-                # DEVOLVEMOS EL ROL PARA QUE EL FRONTEND SEPA QUÉ PANTALLA MOSTRAR
                 return Response({
                     "mensaje": "Bienvenido", 
                     "nombre": user.nombre_completo,
@@ -241,22 +236,22 @@ class RegistroView(APIView):
             user = serializer.save() 
             codigo = user.generar_codigo_verificacion()
             
-            # --- BLINDAJE DE CORREO (Try-Except) ---
-            # Imprimimos en consola por si falla el correo real
-            print(f"\n{'='*40}\n📧 INTENTO EMAIL A: {user.email}\n🔑 CÓDIGO DE RESPALDO: {codigo}\n{'='*40}\n")
+            # --- BLINDAJE DE CORREO (AQUÍ ESTÁ LA MAGIA) ---
+            # Imprimimos en consola el código por si falla el correo
+            print(f"\n{'='*40}\n📧 CÓDIGO DE RESPALDO PARA {user.email}: {codigo}\n{'='*40}\n")
             
             try:
-                # OJO: Cambia el remitente si usas otro correo
                 send_mail(
                     'Tu código de verificación - Uniandes Eats',
                     f'Hola {user.nombre_completo}, bienvenido a Uniandes Eats.\n\nTu código es: {codigo}',
-                    'contacto@andeseats.com', 
+                    'contacto@andeseats.com', # Debe coincidir con tu variable EMAIL_HOST_USER en Render
                     [user.email],
                     fail_silently=False,
                 )
             except Exception as e:
+                # Si falla, imprimimos el error pero NO detenemos el proceso
                 print(f"❌ ERROR CRÍTICO ENVIANDO CORREO: {e}")
-                # No retornamos error al usuario para no bloquear el registro
+                # El usuario igual avanza a la pantalla de poner código
             
             return Response({"mensaje": "Usuario creado.", "email": user.email}, status=status.HTTP_201_CREATED)
         
