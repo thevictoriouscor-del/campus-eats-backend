@@ -15,7 +15,6 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-clave-super-secreta-d
 DEBUG = 'RENDER' not in os.environ
 
 # HOSTS PERMITIDOS:
-# Aceptamos tu dominio y el de render.
 ALLOWED_HOSTS = ['*', 'andeseats.com', 'www.andeseats.com']
 
 # SEGURIDAD HTTPS (CRÍTICO PARA LOGIN EN RENDER)
@@ -70,8 +69,6 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 
 # BASE DE DATOS INTELIGENTE
-# En Render: Usa la variable DATABASE_URL (PostgreSQL)
-# En PC: Usa db.sqlite3
 DATABASES = {
     'default': dj_database_url.config(
         default=f'sqlite:///{BASE_DIR / "db.sqlite3"}',
@@ -91,43 +88,43 @@ TIME_ZONE = 'America/Bogota'
 USE_I18N = True
 USE_TZ = True
 
-# ARCHIVOS ESTÁTICOS (CSS, JS, IMÁGENES)
+# ARCHIVOS ESTÁTICOS
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
-# ARCHIVOS MULTIMEDIA (FOTOS DE COMPROBANTES)
+# ARCHIVOS MULTIMEDIA
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'core.User'
 
-# --- CONFIGURACIÓN DE CORREO UNIVERSAL (HOSTINGER / GMAIL) ---
+# --- CONFIGURACIÓN DE CORREO (ROBUSTA) ---
 if 'EMAIL_HOST_USER' in os.environ:
-    # Si hay variables en Render, usamos SMTP real
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
     EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.hostinger.com')
-    EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 465))
+    EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
     EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
     EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
     DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
     
-    # Lógica automática para SSL/TLS según el puerto
+    # Lógica explícita para Hostinger
     if EMAIL_PORT == 465:
         EMAIL_USE_SSL = True
         EMAIL_USE_TLS = False
     else:
+        # Puerto 587 (Recomendado para evitar bloqueos)
         EMAIL_USE_SSL = False
         EMAIL_USE_TLS = True
         
-    EMAIL_TIMEOUT = 10 
+    EMAIL_TIMEOUT = 30 # Damos más tiempo antes de tirar error
 else:
-    # Si NO hay variables (en tu PC), usamos la consola negra
+    # Modo local
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # Seguridad de Sesiones
-SESSION_COOKIE_AGE = 600 # 10 minutos
+SESSION_COOKIE_AGE = 600 
 SESSION_SAVE_EVERY_REQUEST = True 
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 LOGOUT_REDIRECT_URL = '/admin/login/'
