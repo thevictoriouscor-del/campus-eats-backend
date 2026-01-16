@@ -5,26 +5,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Uniandes Eats</title>
-    <link rel="icon" href="{% static 'img/logo.jpg' %}?v=4" type="image/jpeg">
-    <link rel="shortcut icon" href="{% static 'img/logo.jpg' %}?v=4" type="image/jpeg">
+    <!-- FAVICON -->
+    <link rel="icon" href="{% static 'img/logo.jpg' %}?v=5" type="image/jpeg">
+    <link rel="shortcut icon" href="{% static 'img/logo.jpg' %}?v=5" type="image/jpeg">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        .fade-in { animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
         .hidden-screen { display: none !important; }
         .toast-enter { transform: translateY(-100%); opacity: 0; transition: all 0.3s ease-out; }
         .toast-visible { transform: translateY(0); opacity: 1; }
         .scale-in { animation: scaleIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         @keyframes scaleIn { from { transform: scale(0); } to { transform: scale(1); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .valid-crit { color: #16a34a; font-weight: bold; }
         .invalid-crit { color: #9ca3af; }
     </style>
 </head>
-<body class="bg-gray-100 font-sans text-gray-800 h-screen flex justify-center items-center p-4">
+<body class="bg-gray-100 font-sans text-gray-800 h-screen flex justify-center items-center p-2 selection:bg-yellow-200 bg-cover bg-center relative" style="background-image: url('https://images.unsplash.com/photo-1541339907198-e08756dedf3f?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80');">
+    
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm z-0"></div>
     <script>const CSRF_TOKEN = '{{ csrf_token }}';</script>
     
-    <div class="w-full md:max-w-7xl h-full md:h-[95vh] bg-white sm:rounded-3xl shadow-2xl overflow-hidden relative flex flex-col transition-all duration-300 border border-white/20">
+    <!-- CONTENEDOR PRINCIPAL (ULTRA ANCHO 98%) -->
+    <div class="w-full md:max-w-[98%] h-full md:h-[95vh] bg-white sm:rounded-3xl shadow-2xl overflow-hidden relative flex flex-col transition-all duration-500 ease-out z-10 border border-white/20">
         
         <!-- TOAST -->
         <div id="toast-container" class="absolute top-4 left-0 right-0 z-50 pointer-events-none toast-enter flex justify-center">
@@ -34,14 +39,14 @@
         <!-- HEADER -->
         <div class="bg-yellow-400 p-4 md:p-6 text-center md:text-left md:flex md:justify-between md:items-center rounded-b-[2rem] shadow-md z-10 relative">
             <div class="absolute top-4 left-4 right-4 md:static md:order-2 md:w-auto flex justify-between md:gap-4">
-                <div id="user-info" class="text-xs font-bold hidden bg-white/30 px-3 py-1.5 rounded-lg backdrop-blur-sm flex items-center gap-2">
+                <div id="user-info" class="text-xs font-bold hidden bg-white/30 px-3 py-1.5 rounded-lg backdrop-blur-sm flex items-center gap-2 transition hover:bg-white/50">
                     <i data-lucide="user" class="w-3 h-3"></i> <span id="user-role-label"></span>
                 </div>
-                <button id="btn-logout" onclick="tryLogout()" class="text-xs font-bold bg-black text-white px-4 py-1.5 rounded-full hidden hover:bg-gray-800 transition shadow-lg">Salir</button>
+                <button id="btn-logout" onclick="tryLogout()" class="text-xs font-bold bg-black text-white px-4 py-1.5 rounded-full hidden hover:bg-gray-800 transition shadow-lg hover:scale-105 active:scale-95">Salir</button>
             </div>
             <div class="mt-8 md:mt-0 md:flex md:items-center md:gap-4 md:order-1">
                 <div class="flex justify-center md:inline-block mb-2 md:mb-0">
-                    <div class="bg-white p-1 rounded-full shadow-lg w-16 h-16 flex items-center justify-center overflow-hidden border-2 border-yellow-200 cursor-pointer" onclick="showScreen('screen-menu')">
+                    <div class="bg-white p-1 rounded-full shadow-lg cursor-pointer hover:rotate-3 transition duration-300 w-16 h-16 flex items-center justify-center overflow-hidden border-2 border-yellow-200" onclick="showScreen('screen-menu')">
                         <img src="{% static 'img/logo.jpg' %}" alt="Logo" class="w-full h-full object-cover">
                     </div>
                 </div>
@@ -54,140 +59,152 @@
             
             <!-- 1. LOGIN -->
             <div id="screen-login" class="fade-in space-y-6 pt-4 max-w-md mx-auto">
-                <div class="text-center"><h2 class="text-xl font-bold text-gray-800">Iniciar Sesión</h2></div>
+                <div class="text-center"><h2 class="text-2xl font-bold text-gray-800">Iniciar Sesión</h2></div>
                 <form id="form-login" class="space-y-4" onsubmit="doLogin(event)">
-                    <input type="email" id="login-email" placeholder="Correo" class="w-full p-4 bg-white rounded-xl border" required>
+                    <input type="email" id="login-email" placeholder="Correo Uniandes" class="w-full p-4 bg-white rounded-xl border border-gray-200 focus:border-yellow-400 focus:ring-2 focus:ring-yellow-100 outline-none transition font-medium" required>
                     <div class="relative">
-                        <input type="password" id="login-password" placeholder="Contraseña" class="w-full p-4 bg-white rounded-xl border pr-12" required>
-                        <button type="button" onclick="togglePassword('login-password')" class="absolute right-3 top-3 text-gray-400"><i data-lucide="eye" class="w-5 h-5"></i></button>
+                        <input type="password" id="login-password" placeholder="Contraseña" class="w-full p-4 bg-white rounded-xl border border-gray-200 focus:border-yellow-400 focus:ring-2 focus:ring-yellow-100 outline-none transition font-medium pr-12" required>
+                        <button type="button" onclick="togglePassword('login-password')" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-black focus:outline-none p-1"><i data-lucide="eye" class="w-5 h-5"></i></button>
+                        <div class="text-right mt-1"><a href="#" onclick="showToast('Contacta a soporte@andeseats.com', true)" class="text-xs text-gray-500 hover:text-yellow-600 font-semibold transition">¿Olvidaste tu contraseña?</a></div>
                     </div>
-                    <button type="submit" class="w-full bg-black text-white font-bold py-4 rounded-xl shadow-lg">ENTRAR</button>
+                    <button type="submit" class="w-full bg-black text-white font-bold py-4 rounded-xl shadow-lg hover:bg-gray-800 transition transform active:scale-95">ENTRAR</button>
                 </form>
                 
                 <div id="verify-alert" class="hidden bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-r-xl relative shadow-sm mt-4">
-                    <div class="flex items-center gap-2"><i data-lucide="alert-triangle" class="w-5 h-5"></i><p class="text-xs font-bold">Cuenta no verificada. Revisa tu correo.</p></div>
+                    <div class="flex items-center gap-2"><i data-lucide="alert-triangle" class="w-5 h-5"></i><div><p class="font-bold text-sm">Cuenta no verificada</p><p class="text-xs">Revisa tu correo.</p></div></div>
                     <button onclick="showScreen('screen-verify')" class="absolute top-4 right-4 text-xs font-black underline hover:text-red-900">Ingresar Código</button>
                 </div>
 
-                <div class="text-center pt-4 border-t mt-6 flex flex-col gap-3">
-                    <button onclick="showScreen('screen-register')" class="text-yellow-600 font-bold bg-yellow-50 p-3 rounded-xl">🎓 Crear Cuenta</button>
-                    <button onclick="showScreen('screen-register-courier')" class="text-gray-500 text-xs font-bold">🚴 Trabaja con nosotros</button>
+                <div class="text-center pt-4 border-t border-gray-200 mt-6 flex flex-col gap-3">
+                    <button onclick="showScreen('screen-register')" class="text-yellow-600 font-bold hover:underline bg-yellow-50 p-3 rounded-xl border border-yellow-100">🎓 Crear Cuenta Uniandina</button>
+                    <button onclick="showScreen('screen-register-courier')" class="text-gray-500 text-xs font-bold hover:text-black transition flex items-center justify-center gap-1"><i data-lucide="bike" class="w-3 h-3"></i> Trabaja con nosotros</button>
                 </div>
             </div>
 
-            <!-- 2. REGISTRO -->
+            <!-- 2. REGISTRO (ESTUDIANTE / PROFESOR) -->
             <div id="screen-register" class="hidden-screen fade-in space-y-4 max-w-md mx-auto">
-                <button onclick="showScreen('screen-login')" class="flex items-center text-gray-400 font-bold mb-2"><i data-lucide="arrow-left" class="w-5 h-5 mr-1"></i> Volver</button>
-                <h2 class="text-xl font-bold text-gray-700">Registro</h2>
+                <button onclick="showScreen('screen-login')" class="flex items-center text-gray-400 hover:text-black mb-2 transition hover:-translate-x-1"><i data-lucide="arrow-left" class="w-5 h-5 mr-1"></i> Volver</button>
+                <h2 class="text-xl font-bold text-gray-700">Crear Cuenta</h2>
                 <form id="form-register" class="space-y-3" onsubmit="doRegister(event, false)">
                     <div class="flex gap-2 mb-2">
-                        <label class="flex-1 cursor-pointer"><input type="radio" name="rol_tipo" value="ESTUDIANTE" checked class="peer hidden"><div class="text-center p-2 border rounded-lg peer-checked:bg-yellow-400 peer-checked:font-bold text-sm">Estudiante</div></label>
-                        <label class="flex-1 cursor-pointer"><input type="radio" name="rol_tipo" value="PROFESOR" class="peer hidden"><div class="text-center p-2 border rounded-lg peer-checked:bg-black peer-checked:text-white peer-checked:font-bold text-sm">Profesor</div></label>
+                        <label class="flex-1 cursor-pointer"><input type="radio" name="rol_tipo" value="ESTUDIANTE" checked class="peer hidden"><div class="text-center p-2 border rounded-lg peer-checked:bg-yellow-400 peer-checked:font-bold peer-checked:border-yellow-400 text-sm transition">Estudiante</div></label>
+                        <label class="flex-1 cursor-pointer"><input type="radio" name="rol_tipo" value="PROFESOR" class="peer hidden"><div class="text-center p-2 border rounded-lg peer-checked:bg-black peer-checked:text-white peer-checked:font-bold peer-checked:border-black text-sm transition">Profesor</div></label>
                     </div>
-                    <input type="text" id="reg-nombre" placeholder="Nombre" class="w-full p-3 border rounded-xl" required>
-                    <input type="text" id="reg-codigo" placeholder="Código" class="w-full p-3 border rounded-xl" required>
+                    <input type="text" id="reg-nombre" placeholder="Nombre Completo" class="w-full p-3 border rounded-xl" required>
+                    <input type="text" id="reg-codigo" placeholder="Código / Cédula" class="w-full p-3 border rounded-xl" required>
                     <input type="email" id="reg-email" placeholder="Correo @uniandes.edu.co" class="w-full p-3 border rounded-xl" required>
                     <input type="tel" id="reg-celular" placeholder="Celular" class="w-full p-3 border rounded-xl" required>
                     
                     <div class="relative">
                         <input type="password" id="reg-pass" placeholder="Contraseña Segura" class="w-full p-3 border rounded-xl pr-12" required onkeyup="validatePassword('reg')">
-                        <button type="button" onclick="togglePassword('reg-pass')" class="absolute right-3 top-3 text-gray-400"><i data-lucide="eye" class="w-5 h-5"></i></button>
-                        <div id="reg-pass-criteria" class="mt-2 text-[10px] grid grid-cols-2 gap-1 hidden bg-white p-2 border rounded">
-                             <span id="reg-c-len" class="invalid-crit">8-15 caracteres</span>
-                             <span id="reg-c-up" class="invalid-crit">Mayúscula</span>
-                             <span id="reg-c-low" class="invalid-crit">Minúscula</span>
-                             <span id="reg-c-num" class="invalid-crit">Número</span>
-                             <span id="reg-c-spec" class="invalid-crit">Especial (!@#)</span>
+                        <button type="button" onclick="togglePassword('reg-pass')" class="absolute right-3 top-3 text-gray-400 hover:text-black focus:outline-none p-1"><i data-lucide="eye" class="w-5 h-5"></i></button>
+                        <div id="reg-pass-criteria" class="mt-2 text-[10px] grid grid-cols-2 gap-1 hidden bg-white p-2 rounded border">
+                            <span id="reg-c-len" class="invalid-crit flex items-center"><i data-lucide="circle" class="w-3 h-3 mr-1"></i> 8-15 caracteres</span>
+                            <span id="reg-c-up" class="invalid-crit flex items-center"><i data-lucide="circle" class="w-3 h-3 mr-1"></i> Mayúscula</span>
+                            <span id="reg-c-low" class="invalid-crit flex items-center"><i data-lucide="circle" class="w-3 h-3 mr-1"></i> Minúscula</span>
+                            <span id="reg-c-num" class="invalid-crit flex items-center"><i data-lucide="circle" class="w-3 h-3 mr-1"></i> Número</span>
+                            <span id="reg-c-spec" class="invalid-crit flex items-center"><i data-lucide="circle" class="w-3 h-3 mr-1"></i> Especial (!@#)</span>
                         </div>
                     </div>
-                    <div class="flex items-start space-x-2 pt-2"><input type="checkbox" required class="mt-1"><div class="text-xs text-gray-500">Acepto <a href="#" onclick="showLegal('terms')" class="underline">Términos</a> y <a href="#" onclick="showLegal('privacy')" class="underline">Política</a>.</div></div>
-                    <button type="submit" class="w-full bg-yellow-400 font-bold py-3 rounded-xl shadow-md">REGISTRARME</button>
+                    <div class="flex items-start space-x-2 pt-2 px-1"><input type="checkbox" required class="mt-1 accent-yellow-400 w-4 h-4 cursor-pointer"><div class="text-xs text-gray-500 leading-tight">Acepto los <a href="#" onclick="showLegal('terms')" class="underline text-black font-bold hover:text-yellow-600">Términos</a> y <a href="#" onclick="showLegal('privacy')" class="underline text-black font-bold hover:text-yellow-600">Política</a>.</div></div>
+                    <button type="submit" class="w-full bg-yellow-400 font-bold py-3 rounded-xl shadow-md hover:bg-yellow-300 transition transform active:scale-95 text-black">REGISTRARME</button>
                 </form>
             </div>
 
             <!-- 3. REGISTRO REPARTIDOR -->
             <div id="screen-register-courier" class="hidden-screen fade-in space-y-4 max-w-md mx-auto">
-                <button onclick="showScreen('screen-login')" class="flex items-center text-gray-400 font-bold mb-2"><i data-lucide="arrow-left" class="w-5 h-5 mr-1"></i> Volver</button>
-                <h2 class="text-xl font-bold">Aspirante Domiciliario</h2>
+                <button onclick="showScreen('screen-login')" class="flex items-center text-gray-400 hover:text-black mb-2 transition hover:-translate-x-1"><i data-lucide="arrow-left" class="w-4 h-4 mr-1"></i> Volver</button>
+                <h2 class="text-xl font-bold text-gray-700">Aspirante a Domiciliario</h2>
                 <form id="form-register-courier" class="space-y-3" onsubmit="doRegister(event, true)">
-                    <input type="text" id="cour-nombre" placeholder="Nombre" class="w-full p-3 border rounded-xl" required>
-                    <input type="text" id="cour-codigo" placeholder="Código" class="w-full p-3 border rounded-xl" required>
-                    <input type="email" id="cour-email" placeholder="Correo" class="w-full p-3 border rounded-xl" required>
-                    <input type="tel" id="cour-celular" placeholder="Celular" class="w-full p-3 border rounded-xl" required>
+                    <input type="text" id="cour-nombre" placeholder="Nombre Completo" class="w-full p-3 border rounded-xl" required>
+                    <input type="text" id="cour-codigo" placeholder="Código Estudiante" class="w-full p-3 border rounded-xl" required>
+                    <input type="email" id="cour-email" placeholder="Correo Institucional" class="w-full p-3 border rounded-xl" required>
+                    <input type="tel" id="cour-celular" placeholder="Celular (Obligatorio)" class="w-full p-3 border rounded-xl" required>
                     <div class="relative">
-                        <input type="password" id="cour-pass" placeholder="Contraseña" class="w-full p-3 border rounded-xl pr-12" required onkeyup="validatePassword('cour')">
-                        <button type="button" onclick="togglePassword('cour-pass')" class="absolute right-3 top-3 text-gray-400"><i data-lucide="eye" class="w-5 h-5"></i></button>
-                        <div id="cour-pass-criteria" class="mt-2 text-[10px] grid grid-cols-2 gap-1 hidden bg-white p-2 border rounded">
-                             <span id="cour-c-len" class="invalid-crit">8-15 caracteres</span>
-                             <span id="cour-c-up" class="invalid-crit">Mayúscula</span>
-                             <span id="cour-c-low" class="invalid-crit">Minúscula</span>
-                             <span id="cour-c-num" class="invalid-crit">Número</span>
-                             <span id="cour-c-spec" class="invalid-crit">Especial</span>
+                        <input type="password" id="cour-pass" placeholder="Contraseña Segura" class="w-full p-3 border rounded-xl pr-12" required onkeyup="validatePassword('cour')">
+                        <button type="button" onclick="togglePassword('cour-pass')" class="absolute right-3 top-3 text-gray-400 hover:text-black focus:outline-none p-1"><i data-lucide="eye" class="w-5 h-5"></i></button>
+                         <div id="cour-pass-criteria" class="mt-2 text-[10px] grid grid-cols-2 gap-1 hidden bg-white p-2 rounded border">
+                            <span id="cour-c-len" class="invalid-crit flex items-center"><i data-lucide="circle" class="w-3 h-3 mr-1"></i> 8-15 caracteres</span>
+                            <span id="cour-c-up" class="invalid-crit flex items-center"><i data-lucide="circle" class="w-3 h-3 mr-1"></i> Mayúscula</span>
+                            <span id="cour-c-low" class="invalid-crit flex items-center"><i data-lucide="circle" class="w-3 h-3 mr-1"></i> Minúscula</span>
+                            <span id="cour-c-num" class="invalid-crit flex items-center"><i data-lucide="circle" class="w-3 h-3 mr-1"></i> Número</span>
+                            <span id="cour-c-spec" class="invalid-crit flex items-center"><i data-lucide="circle" class="w-3 h-3 mr-1"></i> Especial (!@#)</span>
                         </div>
                     </div>
-                    <div class="text-xs"><input type="checkbox" required> Acepto <a href="#" onclick="showLegal('courier_agreement')" class="underline">Contrato</a>.</div>
-                    <button type="submit" class="w-full bg-black text-white font-bold py-3 rounded-xl">ENVIAR</button>
+                    <div class="bg-yellow-50 p-3 rounded-lg text-xs text-yellow-800"><input type="checkbox" required class="mr-2"> He leído y acepto el <a href="#" onclick="showLegal('courier_agreement')" class="underline font-bold hover:text-black">Contrato de Colaboración</a>.</div>
+                    <button type="submit" class="w-full bg-black text-white font-bold py-3 rounded-xl shadow-md">ENVIAR SOLICITUD</button>
                 </form>
             </div>
 
             <!-- 4. VERIFICACIÓN -->
             <div id="screen-verify" class="hidden-screen fade-in space-y-6 text-center pt-8 max-w-md mx-auto">
                 <h2 class="text-xl font-bold">Verifica tu Correo</h2>
-                <p class="text-sm text-gray-500">Revisa tu correo (o la consola si falla).</p>
+                <p class="text-sm text-gray-500">Revisa tu correo.</p>
                 <form id="form-verify" class="space-y-6" onsubmit="doVerify(event)">
-                    <input type="text" id="verify-code" placeholder="000000" class="w-full text-center text-4xl tracking-widest font-bold p-4 border-2 rounded-xl" maxlength="6" required>
-                    <button type="submit" class="w-full bg-black text-white font-bold py-4 rounded-xl">ACTIVAR</button>
+                    <input type="text" id="verify-code" placeholder="000000" class="w-full text-center text-4xl tracking-widest font-bold p-4 border-2 border-yellow-400 rounded-xl" maxlength="6" required>
+                    <button type="submit" class="w-full bg-black text-white font-bold py-4 rounded-xl hover:bg-gray-800 transition shadow-lg transform active:scale-95">ACTIVAR CUENTA</button>
                 </form>
             </div>
 
-            <!-- PANTALLAS CLIENTE Y REPARTIDOR (Contenido dinámico se inyecta vía JS) -->
+            <!-- PANEL CLIENTE -->
             <div id="client-view" class="hidden-screen">
-                <div id="screen-menu" class="space-y-4">
-                    <div id="active-orders-section" class="hidden"><h3 class="font-bold text-sm mb-2">En Curso</h3><div id="active-orders-container" class="space-y-4"></div></div>
-                    <div class="flex justify-between items-end border-b pb-2"><h2 class="text-lg font-bold">Restaurantes</h2><button onclick="loadMyOrders(); showScreen('screen-history')" class="text-xs font-bold border px-3 py-1 rounded-full">Historial</button></div>
-                    <div id="restaurants-container" class="space-y-4 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-6"></div>
-                </div>
-                <div id="screen-cart" class="hidden-screen fade-in space-y-4 max-w-lg mx-auto">
-                    <button onclick="showScreen('screen-menu')" class="mb-2 font-bold">Volver</button>
-                    <h2 class="text-xl font-bold">Tu Pedido</h2>
-                    <div id="cart-items" class="bg-white p-4 rounded-xl border"></div>
-                    <!-- Opciones de entrega, ubicación y pago se inyectarán o están simplificadas aquí, 
-                         asegúrate de que el JS de 'placeOrder' lea estos IDs -->
-                    <div class="space-y-3 pt-4">
-                        <select id="cart-jornada" class="w-full p-3 border rounded-xl text-sm"><option value="12:00 - 12:45">Turno 12:00</option><option value="12:45 - 13:30">Turno 12:45</option><option value="13:30 - 14:15">Turno 01:30</option></select>
-                        <div class="grid grid-cols-3 gap-2"><div onclick="selectPriority('NORMAL')" id="prio-NORMAL" class="p-2 border rounded text-center cursor-pointer bg-yellow-50 border-yellow-400 text-xs font-bold">Normal</div><div onclick="selectPriority('PRIORITARIA')" id="prio-PRIORITARIA" class="p-2 border rounded text-center cursor-pointer text-xs font-bold">Flash (+$2k)</div><div onclick="selectPriority('FLEXIBLE')" id="prio-FLEXIBLE" class="p-2 border rounded text-center cursor-pointer text-xs font-bold">Relax (-$1k)</div></div><input type="hidden" id="cart-priority" value="NORMAL">
-                        <select id="cart-edificio" onchange="updateCartUI()" class="w-full p-3 border rounded-xl text-sm"><option value="Edificio ML (Mario Laserna)" data-fee="2000">ML ($2k)</option><option value="Edificio C (Arquitectura)" data-fee="3000">C ($3k)</option><option value="Centro Deportivo (La Gata)" data-fee="4000">Centro Deportivo ($4k)</option></select>
-                        <input type="text" id="cart-salon" placeholder="Detalle (Salón 304)" class="w-full p-3 border rounded-xl text-sm" required>
-                        <div class="grid grid-cols-4 gap-2 text-xs"><button onclick="setTip(0)" class="tip-btn bg-black text-white p-2 rounded">No</button><button onclick="setTip(1000)" class="tip-btn border p-2 rounded">$1k</button><button onclick="setTip(2000)" class="tip-btn border p-2 rounded">$2k</button><button onclick="setTip(3000)" class="tip-btn border p-2 rounded">$3k</button></div><input type="hidden" id="cart-tip" value="0">
-                        <input type="file" id="cart-comprobante" class="w-full text-xs">
+                <div id="screen-menu" class="space-y-6">
+                    <div id="active-orders-section" class="hidden">
+                        <h3 class="font-bold text-gray-800 text-sm mb-3 px-1 flex items-center">
+                            <span class="relative flex h-3 w-3 mr-2"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span></span> En Curso
+                        </h3>
+                        <div id="active-orders-container" class="space-y-4"></div>
                     </div>
-                    <div class="pt-4 border-t font-bold text-lg flex justify-between"><span>Total:</span><span id="cart-total-final">$0</span></div>
-                    <button onclick="placeOrder()" class="w-full bg-green-500 text-white font-bold py-4 rounded-xl mt-4">CONFIRMAR</button>
+                    <div class="flex justify-between items-end border-b border-gray-200 pb-3 mt-4 sticky top-0 bg-gray-50 z-20 pt-2 backdrop-blur-sm">
+                        <h2 class="text-xl font-bold text-gray-800">Restaurantes</h2>
+                        <button onclick="loadMyOrders(); showScreen('screen-history')" class="text-xs text-gray-600 font-bold bg-white border border-gray-200 px-3 py-1.5 rounded-full hover:bg-gray-100 flex gap-1 transition shadow-sm"><i data-lucide="history" class="w-3 h-3"></i> Historial</button>
+                    </div>
+                    <div id="restaurants-container" class="space-y-5 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-6"></div>
+                </div>
+
+                <div id="screen-cart" class="hidden-screen fade-in space-y-4 max-w-lg mx-auto">
+                    <button onclick="showScreen('screen-menu')" class="mb-2 flex items-center text-gray-400 hover:text-black transition"><i data-lucide="chevron-left" class="w-5 h-5"></i> Seguir pidiendo</button>
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">Tu Pedido</h2>
+                    <div id="cart-items" class="bg-white p-4 rounded-xl border"></div>
+                    
+                    <div class="space-y-3 pt-4">
+                        <h3 class="font-bold text-sm text-gray-600">Opciones</h3>
+                        <select id="cart-jornada" class="w-full p-3 border rounded-xl text-sm mb-2"><option value="12:00 - 12:45">Almuerzo Temprano</option><option value="12:45 - 13:30" selected>Almuerzo Pico</option><option value="13:30 - 14:15">Almuerzo Tarde</option></select>
+                        <div class="grid grid-cols-3 gap-2"><div onclick="selectPriority('NORMAL')" id="prio-NORMAL" class="p-3 border rounded-xl text-center cursor-pointer border-yellow-400 bg-yellow-50"><div class="text-xs font-bold">Normal</div><div class="text-[10px] text-gray-500">$0</div></div><div onclick="selectPriority('PRIORITARIA')" id="prio-PRIORITARIA" class="p-3 border rounded-xl text-center cursor-pointer"><div class="text-xs font-bold text-red-600">⚡ Flash</div><div class="text-[10px] text-gray-500">+$2.000</div></div><div onclick="selectPriority('FLEXIBLE')" id="prio-FLEXIBLE" class="p-3 border rounded-xl text-center cursor-pointer"><div class="text-xs font-bold text-green-600">🐢 Relax</div><div class="text-[10px] text-gray-500">-$1.000</div></div></div><input type="hidden" id="cart-priority" value="NORMAL">
+                        <h3 class="font-bold text-sm text-gray-600 mt-4">Ubicación</h3>
+                        <select id="cart-edificio" onchange="updateCartUI()" class="w-full p-3 border rounded-xl text-sm"><optgroup label="Zona Base ($2.000)"><option value="Edificio ML (Mario Laserna)" data-fee="2000">Edificio ML</option><option value="Edificio W (Wiesner)" data-fee="2000">Edificio W</option><option value="Edificio SD (Santo Domingo)" data-fee="2000">Edificio SD</option><option value="Edificio AU (Aulas)" data-fee="2000">Edificio AU</option></optgroup><optgroup label="Zona Subida ($3.000)"><option value="Edificio C (Arquitectura)" data-fee="3000">Edificio C</option><option value="Edificio TX (Talleres)" data-fee="3000">Edificio TX</option><option value="Edificio G (Sociales)" data-fee="3000">Edificio G</option></optgroup><optgroup label="Zona Excursión ($4.000)"><option value="Centro Deportivo (La Gata)" data-fee="4000">Centro Deportivo</option><option value="Torre CityU" data-fee="4000">Torre CityU</option></optgroup></select>
+                        <input type="text" id="cart-salon" placeholder="Detalle (Ej: Piso 5, salón 304)" class="w-full p-3 border rounded-xl text-sm" required>
+                        <h3 class="font-bold text-sm text-gray-600 mt-4">Propina ❤️</h3>
+                        <div class="grid grid-cols-4 gap-2"><button onclick="setTip(0)" id="tip-0" class="tip-btn bg-black text-white p-3 rounded-xl text-xs font-bold transition">No</button><button onclick="setTip(1000)" id="tip-1000" class="tip-btn bg-gray-200 text-gray-600 p-3 rounded-xl text-xs font-bold transition">$1k</button><button onclick="setTip(2000)" id="tip-2000" class="tip-btn bg-gray-200 text-gray-600 p-3 rounded-xl text-xs font-bold transition">$2k</button><button onclick="setTip(3000)" id="tip-3000" class="tip-btn bg-gray-200 text-gray-600 p-3 rounded-xl text-xs font-bold transition">$3k</button></div><input type="hidden" id="cart-tip" value="0">
+                    </div>
+                    <div class="space-y-4 pt-6 border-t border-gray-200 mt-6"><h3 class="font-bold text-sm text-gray-600 uppercase tracking-wide">Pago</h3><label class="block w-full p-6 border-2 border-dashed border-gray-300 rounded-2xl text-center cursor-pointer hover:bg-yellow-50 hover:border-yellow-400 transition group" id="drop-area"><input type="file" id="cart-comprobante" accept="image/*" class="hidden" onchange="previewFile()"><div id="file-preview" class="flex flex-col items-center text-gray-400 group-hover:text-yellow-600 transition"><i data-lucide="image-plus" class="w-10 h-10 mb-2"></i><span class="text-xs font-bold">Toca para subir Nequi/DaviPlata</span></div></label></div>
+                    <div class="space-y-2 pt-6 border-t border-gray-200 text-sm mt-6"><div class="flex justify-between text-gray-500"><span>Comida:</span><span id="summary-food">$0</span></div><div class="flex justify-between text-gray-500"><span>Domicilio:</span><span id="summary-delivery">$0</span></div><div class="flex justify-between text-green-600 font-bold"><span>Propina:</span><span id="summary-tip">$0</span></div><div class="flex justify-between font-black text-2xl pt-2 text-gray-900 border-t border-gray-100 mt-2"><span>Total:</span><span id="cart-total-final">$0</span></div></div>
+                    <button onclick="placeOrder()" class="w-full bg-green-500 text-white font-black py-4 rounded-2xl mt-6 mb-24 shadow-xl hover:bg-green-600 transition transform active:scale-95 flex items-center justify-center gap-2">CONFIRMAR PEDIDO <i data-lucide="check" class="w-5 h-5"></i></button>
                 </div>
             </div>
 
             <!-- PANEL REPARTIDOR -->
             <div id="screen-courier" class="hidden-screen fade-in space-y-6">
-                <h2 class="text-xl font-bold">Entregas</h2>
-                <div class="flex gap-2"><button onclick="loadCourierData('pool')" class="flex-1 bg-yellow-400 py-2 rounded font-bold">Disponibles</button><button onclick="loadCourierData('mine')" class="flex-1 border py-2 rounded font-bold">Mis Entregas</button></div>
+                <h2 class="text-xl font-bold text-gray-800">Panel de Entregas</h2>
+                <div class="flex gap-2 bg-gray-200 p-1 rounded-xl"><button onclick="loadCourierData('pool')" class="flex-1 bg-white text-black font-bold py-2 rounded-lg shadow-sm transition">🔥 Disponibles</button><button onclick="loadCourierData('mine')" class="flex-1 text-gray-500 font-bold py-2 rounded-lg hover:bg-gray-100 transition">🎒 Mis Entregas</button></div>
                 <div id="courier-orders-container" class="space-y-4"></div>
             </div>
-            
-            <!-- HISTORIAL Y EXITO -->
-            <div id="screen-history" class="hidden-screen fade-in space-y-4"><button onclick="showScreen('screen-menu')">Volver</button><h2>Historial</h2><div id="history-container"></div></div>
-            <div id="screen-order-success" class="hidden-screen fade-in text-center pt-10"><h2 class="text-3xl font-bold">¡Enviado!</h2><p>Orden <span id="success-order-id" class="font-bold">#</span></p><button onclick="showScreen('screen-menu')" class="w-full bg-black text-white py-3 rounded-xl mt-4">Volver</button></div>
         </div>
-
-        <!-- MODALES Y FLOATS -->
-        <div id="cart-float" onclick="showScreen('screen-cart')" class="hidden absolute bottom-6 right-6 bg-black text-white p-4 rounded-full shadow-xl flex items-center gap-2 cursor-pointer"><span id="cart-count" class="bg-yellow-400 text-black rounded-full w-6 h-6 flex justify-center items-center text-xs font-bold">0</span> Ver <span id="cart-total" class="font-bold text-lg ml-2">$0</span></div>
-        <div id="loading" class="hidden absolute inset-0 bg-white/80 flex justify-center items-center z-50"><div class="animate-spin text-yellow-500"><i data-lucide="loader-2" class="w-10 h-10"></i></div></div>
         
-        <div id="modal-legal" class="hidden fixed inset-0 bg-black/60 z-[100] flex justify-center items-center p-4"><div class="bg-white w-full max-w-md rounded-2xl p-6 h-[80vh] flex flex-col"><div class="flex justify-between border-b pb-2"><h3 id="legal-title" class="font-bold"></h3><button onclick="closeLegal()">X</button></div><div id="legal-content" class="flex-1 overflow-y-auto py-2 text-sm text-justify"></div></div></div>
-        <div id="modal-confirm" class="hidden fixed inset-0 bg-black/60 z-[60] flex justify-center items-center"><div class="bg-white rounded-2xl p-6 text-center"><h3 id="confirm-title" class="font-bold"></h3><p id="confirm-desc" class="text-sm"></p><div class="flex gap-2 mt-4"><button onclick="closeConfirm()" class="flex-1 bg-gray-200 py-2 rounded">No</button><button id="confirm-yes-btn" class="flex-1 bg-black text-white py-2 rounded">Sí</button></div></div></div>
-        <div id="modal-order-detail" class="hidden fixed inset-0 bg-black/50 z-50 flex justify-center items-center"><div class="bg-white w-full max-w-md rounded-2xl p-6"><div class="flex justify-between border-b pb-2"><h3 class="font-bold">Detalle</h3><button onclick="closeModal()">X</button></div><div id="modal-content" class="py-4"></div><button id="btn-cancel-order" class="w-full border-red-500 text-red-500 border py-2 rounded hidden">Cancelar</button><p id="msg-cancel-locked" class="hidden text-xs text-center text-gray-400">No se puede cancelar</p><a id="btn-whatsapp-courier" href="#" class="hidden w-full bg-green-500 text-white py-2 rounded mt-2 text-center block">WhatsApp Repartidor</a></div></div>
+        <!-- ELEMENTOS FLOTANTES Y MODALES -->
+        <div id="cart-float" onclick="showScreen('screen-cart')" class="hidden absolute bottom-6 right-6 md:left-auto md:w-96 bg-black text-white p-4 rounded-2xl shadow-2xl flex justify-between items-center cursor-pointer hover:bg-gray-800 transition transform hover:scale-105 scale-in z-40 border border-yellow-500/30"><div class="flex items-center gap-3"><div class="bg-yellow-400 text-black w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shadow-md" id="cart-count">0</div><span class="font-bold text-sm">Ver Pedido</span></div><span class="font-bold text-lg" id="cart-total">$0</span></div>
+        <div id="loading" class="hidden absolute inset-0 bg-white/80 backdrop-blur-sm flex justify-center items-center z-50 rounded-3xl"><div class="animate-spin text-yellow-500 mb-2"><i data-lucide="loader-2" class="w-12 h-12"></i></div></div>
+        
+        <div id="modal-legal" class="hidden fixed inset-0 bg-black/60 z-[100] flex justify-center items-center p-4 backdrop-blur-sm scale-in"><div class="bg-white w-full max-w-lg rounded-3xl p-6 shadow-2xl h-[80vh] flex flex-col relative overflow-hidden"><div class="absolute top-0 left-0 w-full h-2 bg-yellow-400"></div><div class="flex justify-between mb-4 border-b pb-4"><h3 class="text-xl font-bold text-gray-800" id="legal-title"></h3><button onclick="closeLegal()" class="bg-gray-100 p-2 rounded-full hover:bg-gray-200 transition"><i data-lucide="x" class="w-5 h-5"></i></button></div><div id="legal-content" class="flex-1 overflow-y-auto text-sm text-gray-600 text-justify p-2 leading-relaxed"></div><button onclick="closeLegal()" class="w-full bg-black text-white font-bold py-4 rounded-2xl mt-4 hover:bg-gray-800 transition">Entendido</button></div></div>
+        
+        <div id="modal-order-detail" class="hidden fixed inset-0 bg-black/50 z-50 flex justify-center items-end sm:items-center backdrop-blur-sm"><div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl scale-in"><div class="flex justify-between items-center mb-4"><h3 class="text-lg font-bold">Detalle</h3><button onclick="closeModal()" class="bg-gray-100 p-2 rounded-full"><i data-lucide="x" class="w-4 h-4"></i></button></div><div id="modal-content" class="space-y-4 mb-6 max-h-64 overflow-y-auto pr-2"></div><button id="btn-cancel-order" class="w-full border-2 border-red-100 text-red-500 font-bold py-3 rounded-2xl hover:bg-red-50 transition hidden">Cancelar Pedido</button><p id="msg-cancel-locked" class="text-xs text-gray-400 text-center mt-2 hidden">No se puede cancelar</p><a id="btn-whatsapp-courier" href="#" target="_blank" class="w-full bg-green-500 text-white font-bold py-3 rounded-2xl hover:bg-green-600 transition mt-3 flex items-center justify-center gap-2 hidden"><i data-lucide="message-circle" class="w-5 h-5"></i> Contactar Repartidor</a><div class="mt-4 pt-4 border-t text-center"><p class="text-[10px] text-gray-400"><a href="#" onclick="showLegal('cancellation')" class="underline font-bold text-gray-500">Políticas de Cancelación</a></p></div></div></div>
+
+        <div id="modal-confirm" class="hidden fixed inset-0 bg-black/60 z-[60] flex justify-center items-center backdrop-blur-sm"><div class="bg-white w-80 rounded-3xl p-8 text-center scale-in shadow-2xl"><div class="bg-yellow-100 text-yellow-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce"><i data-lucide="alert-circle" class="w-8 h-8"></i></div><h3 class="text-xl font-black text-gray-900 mb-2" id="confirm-title"></h3><p class="text-sm text-gray-500 mb-8 leading-relaxed" id="confirm-desc"></p><div class="flex gap-3"><button onclick="closeConfirm()" class="flex-1 bg-gray-100 text-gray-600 font-bold py-3 rounded-2xl hover:bg-gray-200 transition">No</button><button id="confirm-yes-btn" class="flex-1 bg-black text-white font-bold py-3 rounded-2xl hover:bg-gray-800 transition shadow-lg">Sí</button></div></div></div>
+
+        <div id="screen-order-success" class="hidden-screen fade-in space-y-6 pt-10 max-w-md mx-auto text-center"><div class="bg-green-100 text-green-600 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl animate-[bounce_1s_infinite]"><i data-lucide="check" class="w-12 h-12"></i></div><h2 class="text-3xl font-black text-gray-900">¡Pedido Enviado!</h2><p class="text-gray-500">Tu pedido <span id="success-order-id" class="font-bold text-black bg-yellow-200 px-2 rounded">#0</span> ha sido recibido.</p><div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 text-left space-y-4 mt-8"><div class="flex justify-between border-b border-gray-50 pb-3"><span class="text-gray-400 text-xs font-bold uppercase tracking-wider">Estado</span><span id="success-order-status" class="bg-yellow-100 text-yellow-800 text-xs font-bold px-3 py-1 rounded-full">Pendiente</span></div><div class="flex justify-between border-b border-gray-50 pb-3"><span class="text-gray-400 text-xs font-bold uppercase tracking-wider">Total</span><span id="success-order-total" class="font-bold text-lg">$0</span></div><div><span class="text-gray-400 text-xs font-bold uppercase tracking-wider block mb-1">Ubicación</span><p id="success-order-location" class="text-sm text-gray-800 font-medium">...</p></div></div><div class="space-y-3 mt-8"><button onclick="showScreen('screen-menu')" class="w-full bg-black text-white font-bold py-4 rounded-2xl hover:bg-gray-800 transition shadow-lg">Volver al Menú</button><button onclick="loadMyOrders(); showScreen('screen-history')" class="w-full text-gray-500 font-bold text-sm hover:text-black py-3">Ver Historial</button></div></div>
+        <div id="screen-history" class="hidden-screen fade-in space-y-4 max-w-3xl mx-auto"><button onclick="showScreen('screen-menu')" class="flex items-center text-gray-400 hover:text-black mb-4 transition font-bold"><i data-lucide="arrow-left" class="w-5 h-5 mr-1"></i> Volver</button><h2 class="text-2xl font-bold text-gray-900 mb-6">Mis Pedidos</h2><div id="history-container" class="space-y-4"></div></div>
     </div>
 
-    <!-- JAVASCRIPT MASTER (SIN ERRORES) -->
     <script>
         lucide.createIcons();
         let cart = []; let userRole = 'ESTUDIANTE'; let pollingInterval = null;
@@ -197,14 +214,13 @@
         function toggleLoading(s){document.getElementById('loading').classList.toggle('hidden',!s)}
         function togglePassword(id){const i=document.getElementById(id); i.type=i.type==='password'?'text':'password'; lucide.createIcons();}
 
-        // API CALL BLINDADO
         async function apiCall(url, method, body, isFormData) {
             const headers = {}; let token = getCookie('csrftoken'); if(token) headers['X-CSRFToken']=token;
             if(!isFormData) headers['Content-Type']='application/json';
             const config = { method, headers };
             if (body && method !== 'GET' && method !== 'DELETE') config.body = isFormData ? body : JSON.stringify(body);
             const response = await fetch(url, config);
-            if(method === 'DELETE' && response.status === 204) return {};
+            if(method === 'DELETE' && response.status === 204) return {}; 
             const contentType = response.headers.get("content-type");
             if (contentType && contentType.indexOf("application/json") !== -1) { 
                 const data = await response.json(); 
@@ -216,212 +232,96 @@
             }
         }
 
-        // FUNCIONES DE REGISTRO Y LOGIN (GLOBALES PARA QUE EL HTML LAS VEA)
-        window.doLogin = async function(e) {
-            e.preventDefault(); toggleLoading(true);
-            try {
-                const res = await apiCall('/api/auth/login/', 'POST', {email: document.getElementById('login-email').value, password: document.getElementById('login-password').value});
-                document.getElementById('user-name').innerText = res.nombre;
-                document.getElementById('user-role-label').innerText = res.rol;
-                userRole = res.rol;
-                // Manejo de verificación
-                if(!res.verificado) document.getElementById('verify-alert').classList.remove('hidden'); 
-                else document.getElementById('verify-alert').classList.add('hidden');
-                
-                document.getElementById('user-info').classList.remove('hidden');
-                document.getElementById('btn-logout').classList.remove('hidden');
-                showScreen('screen-menu');
-            } catch (err) { showToast(err.message, true); } finally { toggleLoading(false); }
-        };
-
-        window.doRegister = async function(e, isCourier) {
-            e.preventDefault();
-            const prefix = isCourier ? 'cour' : 'reg';
-            // Validar contraseña
-            if(!validatePassword(prefix)) { showToast("Contraseña insegura", true); return; }
-            
-            toggleLoading(true);
-            const data = {
-                nombre_completo: document.getElementById(prefix+'-nombre').value,
-                codigo_estudiante: document.getElementById(prefix+'-codigo').value,
-                email: document.getElementById(prefix+'-email').value,
-                password: document.getElementById(prefix+'-pass').value,
-                es_aspirante: isCourier
-            };
-            if(document.getElementById(prefix+'-celular')) data.celular = document.getElementById(prefix+'-celular').value;
-
-            try {
-                await apiCall('/api/auth/registro/', 'POST', data);
-                showToast('Código enviado!'); showScreen('screen-verify');
-            } catch(err) { showToast(err.message, true); } finally { toggleLoading(false); }
-        };
-
-        window.doVerify = async function(e) {
-            e.preventDefault(); toggleLoading(true);
-            const email = document.getElementById('reg-email').value || document.getElementById('login-email').value || document.getElementById('cour-email').value;
-            const codigo = document.getElementById('verify-code').value;
-            try {
-                await apiCall('/api/auth/verificar/', 'POST', {email, codigo});
-                showToast('¡Verificado!'); showScreen('screen-login');
-            } catch(err){ showToast(err.message, true); } finally { toggleLoading(false); }
-        };
-
-        // --- INTERFAZ ---
+        // --- NAVEGACIÓN ---
         function showScreen(id) {
             document.querySelectorAll('[id^="screen-"]').forEach(el => el.classList.add('hidden-screen'));
             document.getElementById('client-view').classList.add('hidden-screen');
             document.getElementById('screen-courier').classList.add('hidden-screen');
-            
             if(id === 'screen-menu' || id === 'screen-cart') {
-                if(userRole === 'REPARTIDOR') {
-                    document.getElementById('screen-courier').classList.remove('hidden-screen');
-                    loadCourierData('pool');
-                } else {
-                    document.getElementById('client-view').classList.remove('hidden-screen');
-                    document.getElementById(id).classList.remove('hidden-screen');
-                    if(id==='screen-menu') loadMenu();
-                }
+                if(userRole === 'REPARTIDOR') { document.getElementById('screen-courier').classList.remove('hidden-screen'); loadCourierData('pool'); } 
+                else { document.getElementById('client-view').classList.remove('hidden-screen'); document.getElementById(id).classList.remove('hidden-screen'); if(id==='screen-menu') loadMenu(); }
             } else { document.getElementById(id).classList.remove('hidden-screen'); }
-            
-            // Float btn logic
             const floatBtn = document.getElementById('cart-float');
-            if (id === 'screen-menu' && cart.length > 0 && userRole !== 'REPARTIDOR') floatBtn.classList.remove('hidden'); 
-            else floatBtn.classList.add('hidden');
-            
-            // Polling
+            if (id === 'screen-menu' && cart.length > 0 && userRole !== 'REPARTIDOR') floatBtn.classList.remove('hidden'); else floatBtn.classList.add('hidden');
             if (id === 'screen-menu' && userRole !== 'REPARTIDOR') { loadActiveOrders(); if(!pollingInterval) pollingInterval = setInterval(loadActiveOrders, 5000); } 
             else { if(pollingInterval) clearInterval(pollingInterval); pollingInterval=null; }
         }
 
+        window.onload = function() { const params = new URLSearchParams(window.location.search); if (params.get('screen') === 'register-courier') { showScreen('screen-register-courier'); } };
+
         function validatePassword(prefix) {
             const val = document.getElementById(prefix+'-pass').value;
-            // ... (Lógica de validación visual) ...
-            // Simplificado para ahorrar espacio en el bloque, pero funcional:
-            const valid = val.length >= 8 && /[A-Z]/.test(val) && /[0-9]/.test(val);
-            // Aquí puedes agregar tu lógica visual de colores verde/gris
-            return valid; 
+            const container = document.getElementById(prefix+'-pass-criteria');
+            container.classList.remove('hidden');
+            const criteria = { len: val.length >= 8 && val.length <= 15, up: /[A-Z]/.test(val), low: /[a-z]/.test(val), num: /[0-9]/.test(val), spec: /[!@#$%^&*(),.?":{}|<>]/.test(val) };
+            let allValid = true;
+            for (const [key, isValid] of Object.entries(criteria)) {
+                const el = document.getElementById(`${prefix}-c-${key}`);
+                if (isValid) { el.classList.remove('invalid-crit'); el.classList.add('valid-crit'); el.innerHTML = `<i data-lucide="check-circle" class="w-3 h-3 mr-1"></i> ${el.innerText.replace(/^\s+/, '').replace(/^.*?\s/, '')}`; } 
+                else { el.classList.remove('valid-crit'); el.classList.add('invalid-crit'); el.innerHTML = `<i data-lucide="circle" class="w-3 h-3 mr-1"></i> ${el.innerText.replace(/^\s+/, '').replace(/^.*?\s/, '')}`; allValid = false; }
+            }
+            lucide.createIcons(); return allValid;
         }
 
-        // --- LÓGICA DE NEGOCIO ---
-        window.loadMenu = async function() {
-            try {
-                const data = await apiCall('/api/restaurantes/', 'GET');
-                const div = document.getElementById('restaurants-container');
-                div.innerHTML = '';
-                if(data.length===0){div.innerHTML='<p class="text-center col-span-full">Sin restaurantes</p>'; return;}
-                data.forEach(r => {
-                    let html = `<div class="bg-white p-4 rounded-xl border shadow-sm"><h3 class="font-bold text-lg mb-2">${r.nombre}</h3><div class="space-y-2">`;
-                    r.productos.forEach(p => {
-                        html += `<div onclick="addToCart(${p.id}, '${p.nombre}', ${parseInt(p.precio)})" class="flex justify-between items-center cursor-pointer hover:bg-gray-50 p-2 rounded transition"><span>${p.nombre}</span><span class="font-bold">$${parseInt(p.precio).toLocaleString()}</span></div>`;
-                    });
-                    html += `</div></div>`;
-                    div.innerHTML += html;
-                });
-                lucide.createIcons();
-            } catch(e) { showToast('Error cargando menú', true); }
-        };
-
-        window.addToCart = function(id, nombre, precio) {
-            const item = cart.find(i => i.id === id);
-            if(item) item.cantidad++; else cart.push({id, nombre, precio, cantidad:1});
-            updateCartUI(); showToast(`+1 ${nombre}`);
-        };
-
-        window.updateCartUI = function() {
-            const total = cart.reduce((s,i) => s + (i.precio*i.cantidad), 0);
-            const count = cart.reduce((s,i) => s + i.cantidad, 0);
-            
-            // Recalcular con domicilio (simplificado aquí, usa tu lógica de select)
-            const selectEd = document.getElementById('cart-edificio');
-            const delivery = parseInt(selectEd.options[selectEd.selectedIndex]?.getAttribute('data-fee') || 2000);
-            const tip = parseInt(document.getElementById('cart-tip').value || 0);
-            const final = total + delivery + tip;
-
-            document.getElementById('cart-count').innerText = count;
-            document.getElementById('cart-total').innerText = '$' + final.toLocaleString();
-            document.getElementById('cart-total-final').innerText = '$' + final.toLocaleString();
-            
-            // Render items en checkout
-            const itemsDiv = document.getElementById('cart-items'); itemsDiv.innerHTML = '';
-            cart.forEach(i => { itemsDiv.innerHTML += `<div class="flex justify-between border-b pb-2 mb-2"><span>${i.nombre} (x${i.cantidad})</span><span>$${(i.precio*i.cantidad).toLocaleString()}</span></div>`; });
-            
-            if(count > 0 && !document.getElementById('screen-cart').classList.contains('hidden-screen')) {} 
-            else if(count > 0) document.getElementById('cart-float').classList.remove('hidden');
-        };
-
-        window.placeOrder = async function() {
-            // ... Validaciones ...
-            const fileInput = document.getElementById('cart-comprobante');
-            if(fileInput.files.length === 0) { showToast('Falta comprobante', true); return; }
+        async function doRegister(e, isCourier) {
+            e.preventDefault(); 
+            const prefix = isCourier ? 'cour' : 'reg';
+            if (!validatePassword(prefix)) { showToast("Contraseña insegura", true); return; }
             toggleLoading(true);
-            const items = cart.map(i => ({id_producto: i.id, cantidad: i.cantidad}));
-            const formData = new FormData();
-            formData.append('items', JSON.stringify(items));
-            formData.append('edificio_entrega', document.getElementById('cart-edificio').value);
-            formData.append('detalle_ubicacion', document.getElementById('cart-salon').value);
-            formData.append('comprobante_pago', fileInput.files[0]);
-            formData.append('propina', document.getElementById('cart-tip').value);
-            
-            try {
-                const data = await apiCall('/api/pedidos/', 'POST', formData, true);
-                cart = []; updateCartUI();
-                document.getElementById('success-order-id').innerText = '#' + data.id;
-                showScreen('screen-order-success');
-            } catch(e) { showToast(e.message, true); } finally { toggleLoading(false); }
-        };
+            const data = { nombre_completo: document.getElementById(prefix+'-nombre').value, codigo_estudiante: document.getElementById(prefix+'-codigo').value, email: document.getElementById(prefix+'-email').value, password: document.getElementById(prefix+'-pass').value, es_aspirante: isCourier };
+            if(document.getElementById(prefix+'-celular')) data.celular = document.getElementById(prefix+'-celular').value;
+            if (!isCourier) { const roleRadio = document.querySelector('input[name="rol_tipo"]:checked'); if (roleRadio && roleRadio.value === 'PROFESOR') { /* Opcional */ } }
+            try { await apiCall('/api/auth/registro/', 'POST', data); showToast('Código enviado!'); showScreen('screen-verify'); } catch(err) { showToast(err.message, true); } finally { toggleLoading(false); }
+        }
 
-        // --- CARGA INICIAL ---
-        window.onload = function() {
-            const params = new URLSearchParams(window.location.search);
-            if(params.get('screen') === 'register-courier') showScreen('screen-register-courier');
-            // Inicializar legales y modales
-            lucide.createIcons();
-        };
+        async function doVerify(e) { e.preventDefault(); toggleLoading(true); const email = document.getElementById('reg-email').value || document.getElementById('login-email').value || document.getElementById('cour-email').value; const codigo = document.getElementById('verify-code').value; try { await apiCall('/api/auth/verificar/', 'POST', {email, codigo}); showToast('¡Verificado!'); showScreen('screen-login'); } catch(err){ showToast(err.message, true); } finally { toggleLoading(false); } }
 
-        // LEGALES
-        const LEGAL_TEXTS = { terms: "Términos...", privacy: "Privacidad...", cancellation: "Cancelación...", courier_agreement: "Contrato..." };
-        window.showLegal = function(t) { 
-            document.getElementById('legal-title').innerText = t; 
-            document.getElementById('legal-content').innerHTML = LEGAL_TEXTS[t] || "Texto legal aquí."; 
-            document.getElementById('modal-legal').classList.remove('hidden'); 
+        const LEGAL_TEXTS = {
+            terms: `<h4 class="font-bold mb-2">Términos</h4><p>Somos intermediarios...</p>`,
+            privacy: `<h4 class="font-bold mb-2">Privacidad</h4><p>Datos seguros...</p>`,
+            cancellation: `<h4 class="font-bold mb-2">Cancelación</h4><p>Límites horarios...</p>`,
+            courier_agreement: `<h4 class="font-bold mb-2">Contrato</h4><p>Independiente...</p>`
         };
-        window.closeLegal = function() { document.getElementById('modal-legal').classList.add('hidden'); };
+        function showLegal(type) { document.getElementById('legal-title').innerText={terms:"Términos",privacy:"Privacidad",cancellation:"Cancelación",courier_agreement:"Contrato"}[type]; document.getElementById('legal-content').innerHTML=LEGAL_TEXTS[type]; document.getElementById('modal-legal').classList.remove('hidden'); }
+        function closeLegal() { document.getElementById('modal-legal').classList.add('hidden'); }
 
-        window.setTip = function(a) { document.getElementById('cart-tip').value = a; updateCartUI(); };
-        window.selectPriority = function(t) { document.getElementById('cart-priority').value = t; updateCartUI(); };
-        window.tryLogout = async function() { if(confirm('¿Salir?')) { await apiCall('/api/auth/logout/', 'POST'); location.reload(); } };
+        function setTip(amount) { document.getElementById('cart-tip').value = amount; document.querySelectorAll('.tip-btn').forEach(b => { b.classList.remove('bg-black', 'text-white'); b.classList.add('bg-gray-200', 'text-gray-600'); }); const btn = document.getElementById('tip-'+amount); if(btn) { btn.classList.remove('bg-gray-200', 'text-gray-600'); btn.classList.add('bg-black', 'text-white'); } updateCartUI(); }
+        function selectPriority(type) { document.getElementById('cart-priority').value = type; ['NORMAL', 'PRIORITARIA', 'FLEXIBLE'].forEach(t => { document.getElementById('prio-'+t).classList.remove('border-yellow-400', 'bg-yellow-50'); }); document.getElementById('prio-'+type).classList.add('border-yellow-400', 'bg-yellow-50'); updateCartUI(); }
+        function addToCart(id, nombre, precio, qty=1) { const existing = cart.find(item => item.id === id); if (existing) existing.cantidad += qty; else cart.push({ id, nombre, precio, cantidad: qty }); updateCartUI(); showToast(`+${qty} ${nombre}`); }
+        function updateQuantity(id, change) { const item = cart.find(i => i.id === id); if (item) { item.cantidad += change; if (item.cantidad <= 0) { cart = cart.filter(i => i.id !== id); showToast("Eliminado"); } updateCartUI(); } }
+        function updateCartUI() { const totalFood = cart.reduce((s,i)=>s+(i.precio*i.cantidad),0); const count = cart.reduce((s,i)=>s+i.cantidad,0); const selectEdificio = document.getElementById('cart-edificio'); const deliveryFee = parseInt(selectEdificio.options[selectEdificio.selectedIndex]?.getAttribute('data-fee') || 2000); const priority = document.getElementById('cart-priority').value; let priorityFee = 0; if (priority === 'PRIORITARIA') priorityFee = 2000; if (priority === 'FLEXIBLE') priorityFee = -1000; const tip = parseInt(document.getElementById('cart-tip').value || 0); const total = totalFood + deliveryFee + priorityFee + tip; document.getElementById('cart-count').innerText = count; document.getElementById('cart-total').innerText = '$' + total.toLocaleString(); document.getElementById('summary-food').innerText = '$' + totalFood.toLocaleString(); document.getElementById('summary-delivery').innerText = '$' + deliveryFee.toLocaleString(); let prioText = "$0"; if(priorityFee > 0) prioText = "+$" + priorityFee.toLocaleString(); if(priorityFee < 0) prioText = "-$" + Math.abs(priorityFee).toLocaleString(); document.getElementById('summary-priority').innerText = prioText; document.getElementById('summary-tip').innerText = '$' + tip.toLocaleString(); document.getElementById('cart-total-final').innerText = '$' + total.toLocaleString(); if (count > 0 && !document.getElementById('screen-cart').classList.contains('hidden-screen')) { } else if (count > 0) { document.getElementById('cart-float').classList.remove('hidden'); } const container = document.getElementById('cart-items'); container.innerHTML = ''; cart.forEach(item => { container.innerHTML += `<div class="flex justify-between items-center border-b border-gray-50 last:border-0 pb-3 last:pb-0"><div class="flex-1"><p class="font-bold text-sm">${item.nombre}</p><div class="flex items-center gap-2 mt-1"><button onclick="updateQuantity(${item.id}, -1)" class="w-6 h-6 bg-gray-200 rounded-full font-bold">-</button><span class="text-xs font-bold w-4 text-center">${item.cantidad}</span><button onclick="updateQuantity(${item.id}, 1)" class="w-6 h-6 bg-yellow-400 rounded-full font-bold">+</button></div></div><div class="text-right"><span class="font-bold text-sm block">$${(item.precio*item.cantidad).toLocaleString()}</span><p class="text-[10px] text-gray-400">$${item.precio.toLocaleString()} c/u</p></div></div>`; }); }
         
-        // --- POLLING & ORDERS ---
-        window.loadActiveOrders = async function() {
-             try {
-                 const data = await apiCall('/api/pedidos/', 'GET');
-                 const active = data.filter(p => p.estado !== 'ENTREGADO' && p.estado !== 'CANCELADO');
-                 const container = document.getElementById('active-orders-container');
-                 const section = document.getElementById('active-orders-section');
-                 
-                 if(active.length === 0) { section.classList.add('hidden'); return; }
-                 section.classList.remove('hidden'); container.innerHTML = '';
-                 
-                 active.forEach(p => {
-                     // Render card...
-                     const itemsJson = JSON.stringify(p.items).replace(/"/g, '&quot;');
-                     container.innerHTML += `<div class="bg-white p-3 rounded border shadow-sm cursor-pointer" onclick="openModal(${itemsJson}, ${p.id}, '${p.estado}', '${p.jornada_entrega}', '${p.repartidor_info?.celular || ''}')"><div class="flex justify-between"><span class="font-bold">#${p.id}</span><span class="text-xs bg-yellow-100 px-2 rounded">${p.estado}</span></div></div>`;
-                 });
-             } catch(e) {}
-        };
+        function previewFile() { const file = document.getElementById('cart-comprobante').files[0]; if (file) document.getElementById('file-preview').innerHTML = `<span class="text-green-500 font-bold text-sm flex items-center"><i data-lucide="check-circle" class="w-4 h-4 mr-1"></i> ${file.name.substring(0,10)}...</span>`; lucide.createIcons(); }
+        async function apiCall(url, method, body, isFormData) { const headers = {}; let token = getCookie('csrftoken'); if(token) headers['X-CSRFToken']=token; if(!isFormData) headers['Content-Type']='application/json'; const config = { method, headers }; if (body && method !== 'GET' && method !== 'DELETE') config.body = isFormData ? body : JSON.stringify(body); const response = await fetch(url, config); if(method === 'DELETE' && response.status === 204) return {}; const contentType = response.headers.get("content-type"); if (contentType && contentType.indexOf("application/json") !== -1) { const data = await response.json(); if (!response.ok) throw new Error(data.error || JSON.stringify(data)); return data; } else { const text = await response.text(); console.error("Error no JSON:", text); throw new Error("Error del servidor (Revisar consola)."); } }
+        async function placeOrder() { const edificio = document.getElementById('cart-edificio').value; const detalle = document.getElementById('cart-salon').value; const jornada = document.getElementById('cart-jornada').value; const prioridad = document.getElementById('cart-priority').value; const tip = document.getElementById('cart-tip').value; const fileInput = document.getElementById('cart-comprobante'); if (!detalle) { showToast('Falta detalle ubicación', true); return; } if (cart.length === 0) { showToast('Carrito vacío', true); return; } if (fileInput.files.length === 0) { showToast('Falta comprobante', true); return; } toggleLoading(true); const itemsBackend = cart.map(i => ({ id_producto: i.id, cantidad: i.cantidad })); const formData = new FormData(); formData.append('edificio_entrega', edificio); formData.append('detalle_ubicacion', detalle); formData.append('jornada_entrega', jornada); formData.append('tipo_entrega', prioridad); formData.append('propina', tip); formData.append('comprobante_pago', fileInput.files[0]); formData.append('items', JSON.stringify(itemsBackend)); try { const data = await apiCall('/api/pedidos/', 'POST', formData, true); cart = []; updateCartUI(); document.getElementById('success-order-id').innerText = '#' + data.id; document.getElementById('success-order-status').innerText = data.estado; document.getElementById('success-order-total').innerText = '$' + parseInt(data.total_pagar).toLocaleString(); document.getElementById('success-order-location').innerText = `${data.edificio_entrega} - ${data.detalle_ubicacion}`; showScreen('screen-order-success'); } catch (e) { showToast('Error: ' + e.message, true); } finally { toggleLoading(false); } }
 
-        window.openModal = function(items, id, status, jornada, phone) {
-            // Lógica para llenar modal y mostrar botón de whatsapp si aplica
-            const btnWa = document.getElementById('btn-whatsapp-courier');
-            if(status === 'EN_CAMINO' && phone) {
-                btnWa.href = `https://wa.me/57${phone}`;
-                btnWa.classList.remove('hidden');
-            } else {
-                btnWa.classList.add('hidden');
-            }
-            document.getElementById('modal-order-detail').classList.remove('hidden');
-        };
-        window.closeModal = function() { document.getElementById('modal-order-detail').classList.add('hidden'); };
+        async function loadCourierData(type) {
+            toggleLoading(true); try { const res = await fetch('/api/pedidos/', {headers:{'Content-Type':'application/json'}}); const data = await res.json();
+                const container = document.getElementById('courier-orders-container'); container.innerHTML = '';
+                const pool = data.filter(o => o.estado === 'EN_COCINA' && !o.repartidor);
+                const mine = data.filter(o => o.estado === 'EN_CAMINO' || o.estado === 'ENTREGADO');
+                const showList = (type === 'pool') ? pool : mine;
+                if (showList.length === 0) container.innerHTML = '<div class="col-span-full text-center text-gray-400">No hay pedidos.</div>';
+                showList.forEach(p => {
+                    let actionBtn = type === 'pool' ? `<button onclick="acceptOrder(${p.id})" class="w-full bg-black text-white font-bold py-2 rounded-lg">🖐️ Aceptar</button>` : (p.estado==='EN_CAMINO' ? `<div class="flex gap-2"><a href="https://wa.me/57${p.cliente_info.celular}" target="_blank" class="flex-1 bg-green-500 text-white font-bold py-2 rounded-lg flex justify-center items-center gap-1"><i data-lucide="message-circle" class="w-4 h-4"></i> Chat</a><button onclick="deliverOrder(${p.id})" class="flex-1 bg-black text-white font-bold py-2 rounded-lg">✅ Entregado</button></div>` : '');
+                    let itemsHtml = p.items.map(i => `<span class="text-xs bg-gray-100 px-2 py-1 rounded">${i.cantidad}x ${i.nombre_producto}</span>`).join(' ');
+                    container.innerHTML += `<div class="bg-white p-4 rounded-xl border shadow-sm flex flex-col gap-3"><div class="flex justify-between items-start"><div><span class="font-bold text-lg">#${p.id}</span><span class="text-xs bg-yellow-100 px-2 py-1 rounded-full ml-2">${p.jornada_entrega}</span></div><span class="font-bold text-green-600">$${parseInt(p.total_pagar).toLocaleString()}</span></div><div class="text-sm text-gray-600"><p class="font-bold"><i data-lucide="map-pin" class="w-3 h-3 inline"></i> ${p.edificio_entrega}</p><p class="text-xs">${p.detalle_ubicacion}</p></div><div class="flex flex-wrap gap-1">${itemsHtml}</div>${actionBtn}</div>`;
+                }); lucide.createIcons(); } catch(e) {} finally { toggleLoading(false); }
+        }
+        async function acceptOrder(id) { if(!confirm('¿Tomas este pedido?')) return; try { const res=await fetch(`/api/pedidos/${id}/tomar_pedido/`, {method:'POST', headers:{'X-CSRFToken':CSRF_TOKEN}}); if(res.ok) { loadCourierData('mine'); } } catch(e){} }
+        async function deliverOrder(id) { if(!confirm('¿Entregado?')) return; try { const res=await fetch(`/api/pedidos/${id}/entregar_pedido/`, {method:'POST', headers:{'X-CSRFToken':CSRF_TOKEN}}); if(res.ok) { loadCourierData('mine'); } } catch(e){} }
+
+        document.getElementById('form-login').addEventListener('submit', async (e) => { e.preventDefault(); toggleLoading(true); try { const res = await apiCall('/api/auth/login/', { method: 'POST', headers: {'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN}, body: JSON.stringify({email: document.getElementById('login-email').value, password: document.getElementById('login-password').value}) }); const json = await res.json(); if (res.ok) { document.getElementById('user-name').innerText = json.nombre; document.getElementById('user-role-label').innerText = json.rol; userRole = json.rol; if(!json.verificado) document.getElementById('verify-alert').classList.remove('hidden'); else document.getElementById('verify-alert').classList.add('hidden'); document.getElementById('user-info').classList.remove('hidden'); document.getElementById('btn-logout').classList.remove('hidden'); showScreen('screen-menu'); } else showToast(json.error, true); } catch (e) { showToast('Error red', true); } finally { toggleLoading(false); } });
+        document.getElementById('form-register').addEventListener('submit', async (e) => { e.preventDefault(); toggleLoading(true); try { await apiCall('/api/auth/registro/', 'POST', {email:document.getElementById('reg-email').value, password:document.getElementById('reg-pass').value, nombre_completo:document.getElementById('reg-nombre').value, codigo_estudiante:document.getElementById('reg-codigo').value, celular:document.getElementById('reg-celular').value}); showToast('Código enviado!'); showScreen('screen-verify'); } catch(e){ showToast(e.message, true); } finally{ toggleLoading(false); } });
+        document.getElementById('form-verify').addEventListener('submit', async (e) => { e.preventDefault(); toggleLoading(true); try { await apiCall('/api/auth/verificar/', 'POST', {email:document.getElementById('reg-email').value||document.getElementById('login-email').value, codigo:document.getElementById('verify-code').value}); showToast('Verificado!'); showScreen('screen-login'); } catch(e){ showToast(e.message, true); } finally{ toggleLoading(false); } });
+        async function loadMenu() { try { const data = await apiCall('/api/restaurantes/', 'GET'); const div=document.getElementById('restaurants-container'); div.innerHTML=''; if(data.length===0){div.innerHTML='<p class="text-center text-gray-400 col-span-full">Sin restaurantes</p>';return;} data.forEach(r=>{ let h=`<div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 transition hover:shadow-xl flex flex-col h-full"><div class="flex justify-between mb-4 border-b border-gray-50 pb-2"><h3 class="font-bold text-lg">${r.nombre}</h3><span class="text-xs bg-gray-100 px-2 py-1 rounded-full">${r.ubicacion_local}</span></div><div class="space-y-3 flex-1">`; r.productos.forEach(p=>{ h+=`<div onclick="addToCart(${p.id}, '${p.nombre}', ${parseInt(p.precio)})" class="flex justify-between items-center p-2 hover:bg-yellow-50 rounded-xl cursor-pointer transition group"><div class="flex-1 pr-2"><p class="font-bold text-sm group-hover:text-black">${p.nombre}</p><p class="text-xs text-gray-400 line-clamp-1">${p.descripcion||''}</p></div><div class="flex items-center gap-2"><span class="font-bold text-sm">$${parseInt(p.precio).toLocaleString()}</span><button class="bg-black text-white w-7 h-7 rounded-full flex items-center justify-center shadow"><i data-lucide="plus" class="w-4 h-4"></i></button></div></div>`; }); h+=`</div></div>`; div.innerHTML+=h; }); lucide.createIcons(); } catch(e){ showToast('Error menú', true); } }
+        async function doLogout(){ tryLogout(); }
+        function openModal(itemsJson, orderId, status, jornada, courierPhone) { const items = (typeof itemsJson === 'string') ? JSON.parse(itemsJson) : itemsJson; const container = document.getElementById('modal-content'); container.innerHTML = ''; items.forEach(i => { container.innerHTML += `<div class="flex justify-between border-b border-gray-50 pb-2"><span class="text-sm font-bold text-gray-700">${i.cantidad}x ${i.nombre_producto}</span><span class="text-sm text-gray-500">$${parseInt(i.precio_unitario).toLocaleString()}</span></div>`; }); const now = new Date(); let limitHour = 11; let limitMin = 30; if (jornada) { const startTimeStr = jornada.split('-')[0].trim(); const [h, m] = startTimeStr.split(':').map(Number); const startDate = new Date(); startDate.setHours(h, m, 0, 0); startDate.setMinutes(startDate.getMinutes() - 30); limitHour = startDate.getHours(); limitMin = startDate.getMinutes(); } const btnCancel = document.getElementById('btn-cancel-order'); const msgLocked = document.getElementById('msg-cancel-locked'); const btnWhatsapp = document.getElementById('btn-whatsapp-courier'); const isBeforeLimit = now.getHours() < limitHour || (now.getHours() === limitHour && now.getMinutes() < limitMin); if ((status === 'PENDIENTE' || status === 'VERIFICANDO') && isBeforeLimit) { btnCancel.classList.remove('hidden'); msgLocked.classList.add('hidden'); btnCancel.onclick = () => tryCancelOrder(orderId); } else { btnCancel.classList.add('hidden'); msgLocked.classList.remove('hidden'); if(status !== 'PENDIENTE') msgLocked.innerText = "Ya está en cocina."; else msgLocked.innerText = `Límite: ${limitHour}:${limitMin < 10 ? '0'+limitMin : limitMin}`; } if (status === 'EN_CAMINO' && courierPhone) { btnWhatsapp.classList.remove('hidden'); btnWhatsapp.href = `https://wa.me/57${courierPhone}`; } else { btnWhatsapp.classList.add('hidden'); } document.getElementById('modal-order-detail').classList.remove('hidden'); }
+        function closeModal() { document.getElementById('modal-order-detail').classList.add('hidden'); }
+        async function tryCancelOrder(id) { customConfirm("¿Cancelar?", "No habrá reembolso.", async () => { toggleLoading(true); try { await apiCall(`/api/pedidos/${id}/`, 'DELETE'); closeModal(); showToast("Cancelado"); loadActiveOrders(); } catch(e) { closeModal(); showToast("Eliminado"); loadActiveOrders(); } finally { toggleLoading(false); } }); }
+        async function loadActiveOrders() { try { const data = await apiCall('/api/pedidos/', 'GET'); const container = document.getElementById('active-orders-container'); const section = document.getElementById('active-orders-section'); const active = data.filter(p => p.estado !== 'ENTREGADO' && p.estado !== 'CANCELADO'); if (active.length === 0) { section.classList.add('hidden'); return; } section.classList.remove('hidden'); container.innerHTML = ''; active.forEach(p => { let phase = 1; let label = "Confirmado"; if(p.estado === 'PENDIENTE' || p.estado === 'VERIFICANDO') { phase = 1; label = "Confirmado"; } else if(p.estado === 'EN_COCINA') { phase = 2; label = "En Cocina"; } else if(p.estado === 'EN_CAMINO') { phase = 3; label = "En Camino"; } else if(p.estado === 'ENTREGADO') { phase = 4; label = "Entregado"; } const b1 = phase >= 1 ? 'bg-green-500' : 'bg-gray-200'; const b2 = phase >= 2 ? 'bg-green-500' : 'bg-gray-200'; const b3 = phase >= 3 ? 'bg-green-500' : 'bg-gray-200'; const b4 = phase >= 4 ? 'bg-green-500' : 'bg-gray-200'; const itemsString = JSON.stringify(p.items).replace(/"/g, '&quot;'); const courierPhone = p.repartidor_info ? p.repartidor_info.celular : ''; container.innerHTML += `<div onclick="openModal(${itemsString}, ${p.id}, '${p.estado}', '${p.jornada_entrega}', '${courierPhone}')" class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm transition-all hover:shadow-md cursor-pointer relative overflow-hidden"><div class="flex justify-between items-center mb-3"><div class="flex items-center gap-2"><div class="bg-black text-yellow-400 p-1.5 rounded-lg"><i data-lucide="package" class="w-4 h-4"></i></div><div><p class="font-bold text-sm text-gray-800">Pedido #${p.id}</p><p class="text-xs text-gray-500 font-medium">${label}</p></div></div><span class="font-bold text-sm bg-gray-50 px-2 py-1 rounded text-gray-700">$${parseInt(p.total_pagar).toLocaleString()}</span></div><div class="flex gap-1 h-1.5 mb-2"><div class="flex-1 rounded-full ${b1}"></div><div class="flex-1 rounded-full ${b2}"></div><div class="flex-1 rounded-full ${b3}"></div><div class="flex-1 rounded-full ${b4}"></div></div><div class="flex items-center text-xs text-gray-500"><i data-lucide="map-pin" class="w-3 h-3 mr-1 text-red-400"></i>Llega a: ${p.edificio_entrega}</div></div>`; }); lucide.createIcons(); } catch(e) {} }
+        async function loadMyOrders() { toggleLoading(true); try { const data = await apiCall('/api/pedidos/', 'GET'); const c=document.getElementById('history-container'); c.innerHTML=''; if(data.length===0)c.innerHTML='<p class="text-center text-gray-400">No tienes pedidos anteriores.</p>'; data.forEach(p=>{ const s=JSON.stringify(p.items).replace(/"/g,'&quot;'); c.innerHTML+=`<div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm mb-3"><div class="flex justify-between mb-2"><span class="font-bold">#${p.id}</span><span class="text-xs bg-gray-100 px-2 py-1 rounded">${p.estado}</span></div><p class="text-sm text-gray-600 mb-1"><i data-lucide="map-pin" class="w-3 h-3 inline mr-1"></i> ${p.edificio_entrega}</p><p class="text-xs text-gray-400 mb-3">${new Date(p.fecha_creacion).toLocaleString()}</p><div class="border-t pt-2 flex justify-between"><span class="font-bold">$${parseInt(p.total_pagar).toLocaleString()}</span><button onclick="reorder(${s})" class="text-xs bg-black text-white px-2 py-1 rounded">Repetir</button></div></div>`; }); } catch(e){} finally{ toggleLoading(false); } }
+        function reorder(items){ try{ const it = (typeof items === 'string') ? JSON.parse(items) : items; it.forEach(i=>addToCart(i.producto, i.nombre_producto, parseFloat(i.precio_unitario), i.cantidad)); showToast("Items agregados!"); showScreen('screen-cart'); }catch(e){} }
     </script>
 </body>
 </html>

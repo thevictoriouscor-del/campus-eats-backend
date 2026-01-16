@@ -5,15 +5,20 @@ import dj_database_url
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-tu-clave-secreta-aqui')
+# SEGURIDAD: Clave secreta
+# Lee la variable SECRET_KEY de Render. Si no existe (en tu PC), usa la insegura.
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-clave-super-secreta-de-desarrollo')
 
-# DEBUG: False en producción (Render)
+# DEBUG:
+# Si existe la variable 'RENDER' en el entorno, DEBUG se apaga (Falso).
+# En tu PC (donde no existe esa variable), DEBUG se prende (Verdadero).
 DEBUG = 'RENDER' not in os.environ
 
+# HOSTS PERMITIDOS:
+# Aceptamos tu dominio y el de render.
 ALLOWED_HOSTS = ['*', 'andeseats.com', 'www.andeseats.com']
 
-# SEGURIDAD HTTPS
+# SEGURIDAD HTTPS (CRÍTICO PARA LOGIN EN RENDER)
 CSRF_TRUSTED_ORIGINS = [
     'https://andeseats.com',
     'https://www.andeseats.com',
@@ -21,21 +26,21 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 INSTALLED_APPS = [
-    'jazzmin',
+    'jazzmin',              # 1. Diseño Admin
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'whitenoise.runserver_nostatic',
+    'whitenoise.runserver_nostatic', # Optimización estática local
     'django.contrib.staticfiles',
-    'rest_framework',
-    'core',
+    'rest_framework',       # API
+    'core',                 # Tu App
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    "whitenoise.middleware.WhiteNoiseMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware", # Motor de archivos estáticos en la nube
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -64,6 +69,9 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
+# BASE DE DATOS INTELIGENTE
+# En Render: Usa la variable DATABASE_URL (PostgreSQL)
+# En PC: Usa db.sqlite3
 DATABASES = {
     'default': dj_database_url.config(
         default=f'sqlite:///{BASE_DIR / "db.sqlite3"}',
@@ -83,44 +91,48 @@ TIME_ZONE = 'America/Bogota'
 USE_I18N = True
 USE_TZ = True
 
+# ARCHIVOS ESTÁTICOS (CSS, JS, IMÁGENES)
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
+# ARCHIVOS MULTIMEDIA (FOTOS DE COMPROBANTES)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'core.User'
 
-# --- CONFIGURACIÓN DE CORREO HOSTINGER (OFICIAL) ---
+# --- CONFIGURACIÓN DE CORREO UNIVERSAL (HOSTINGER / GMAIL) ---
 if 'EMAIL_HOST_USER' in os.environ:
+    # Si hay variables en Render, usamos SMTP real
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-    
     EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.hostinger.com')
-    EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
+    EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 465))
     EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
     EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
     DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
     
-    # Configuración estricta para Hostinger en puerto 587
-    if EMAIL_PORT == 587:
-        EMAIL_USE_TLS = True
-        EMAIL_USE_SSL = False
-    elif EMAIL_PORT == 465:
-        EMAIL_USE_TLS = False
+    # Lógica automática para SSL/TLS según el puerto
+    if EMAIL_PORT == 465:
         EMAIL_USE_SSL = True
+        EMAIL_USE_TLS = False
+    else:
+        EMAIL_USE_SSL = False
+        EMAIL_USE_TLS = True
         
     EMAIL_TIMEOUT = 10 
 else:
+    # Si NO hay variables (en tu PC), usamos la consola negra
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # Seguridad de Sesiones
-SESSION_COOKIE_AGE = 600 
+SESSION_COOKIE_AGE = 600 # 10 minutos
 SESSION_SAVE_EVERY_REQUEST = True 
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 LOGOUT_REDIRECT_URL = '/admin/login/'
 
+# Diseño del Admin (JAZZMIN)
 JAZZMIN_SETTINGS = {
     "site_title": "Andes Eats Admin",
     "site_header": "Andes Eats",
