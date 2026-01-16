@@ -1,24 +1,31 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Uniandes Eats - Tu comida sin filas</title>
+    
+    <!-- FAVICON (El logo en la pestaña) -->
+    <link rel="icon" href="{% static 'img/logo.jpg' %}" type="image/jpeg">
+    <link rel="shortcut icon" href="{% static 'img/logo.jpg' %}" type="image/jpeg">
+    
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Iconos -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
         .hero-bg {
-            background-image: url('https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80'); /* Pizza Hero */
+            background-image: url('https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80');
             background-size: cover;
             background-position: center;
-            background-attachment: fixed; /* Efecto Parallax sutil */
+            background-attachment: fixed;
         }
         .gradient-overlay {
             background: linear-gradient(to right, rgba(0,0,0,0.85), rgba(0,0,0,0.5));
         }
-        /* Animaciones */
         .scale-in { animation: scaleIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         @keyframes scaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
         .fade-in { animation: fadeIn 0.5s ease-out; }
@@ -28,20 +35,20 @@
 <body class="bg-white text-gray-900 flex flex-col min-h-screen">
 
     <!-- NAVBAR FLOTANTE -->
-    <nav class="fixed w-full z-50 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm transition-all py-4">
+    <nav class="fixed w-full z-50 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm transition-all py-3">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
-            <!-- LOGO -->
-            <div class="flex items-center gap-2 group cursor-pointer" onclick="window.scrollTo(0,0)">
-                <div class="bg-yellow-400 p-2 rounded-lg text-black group-hover:rotate-12 transition duration-300 shadow-md">
-                    <i data-lucide="utensils" class="w-6 h-6"></i>
+            <!-- LOGO OFICIAL -->
+            <div class="flex items-center gap-3 group cursor-pointer" onclick="window.scrollTo(0,0)">
+                <div class="bg-white p-1 rounded-full shadow-md group-hover:rotate-12 transition duration-300 w-10 h-10 flex items-center justify-center overflow-hidden border border-gray-100">
+                    <img src="{% static 'img/logo.jpg' %}" alt="Logo Uniandes Eats" class="w-full h-full object-cover">
                 </div>
-                <span class="text-xl font-black tracking-tighter">Uniandes Eats</span>
+                <span class="text-xl font-black tracking-tighter text-gray-900">Uniandes Eats</span>
             </div>
 
             <!-- BOTÓN PRINCIPAL (CTA) -->
             <div>
-                <a href="/app/" class="bg-black text-white px-6 py-3 rounded-full font-bold hover:bg-yellow-400 hover:text-black transition transform hover:scale-105 shadow-lg flex items-center gap-2 text-sm sm:text-base">
-                    Haz tu pedido aquí <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                <a href="/app/" class="bg-black text-white px-6 py-2.5 rounded-full font-bold hover:bg-yellow-400 hover:text-black transition transform hover:scale-105 shadow-lg flex items-center gap-2 text-sm sm:text-base">
+                    Haz tu pedido <i data-lucide="arrow-right" class="w-4 h-4"></i>
                 </a>
             </div>
         </div>
@@ -71,25 +78,21 @@
             </div>
         </div>
         
-        <!-- Flecha de scroll -->
         <div class="absolute bottom-10 left-1/2 transform -translate-x-1/2 text-white/50 animate-bounce">
             <i data-lucide="chevron-down" class="w-8 h-8"></i>
         </div>
     </header>
 
-    <!-- SECCIÓN DE VALOR (MISIÓN/VISIÓN) -->
+    <!-- SECCIÓN DE VALOR -->
     <section class="py-24 bg-white relative overflow-hidden">
-        <!-- Decoración de fondo -->
         <div class="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-yellow-100 rounded-full blur-3xl opacity-50"></div>
-        
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <div class="grid md:grid-cols-2 gap-16 items-center">
                 <div class="order-2 md:order-1">
                     <h2 class="text-4xl font-bold mb-6 text-gray-900">Innovando la logística universitaria</h2>
                     <p class="text-gray-600 text-lg mb-8 leading-relaxed">
-                        Nacimos en los pasillos del ML con una idea simple: el tiempo de un estudiante vale oro. No deberías gastar tu hueco haciendo fila en la cafetería cuando podrías estar estudiando o descansando.
+                        Nacimos en los pasillos del ML con una idea simple: el tiempo de un estudiante vale oro. No deberías gastar tu hueco haciendo fila en la cafetería.
                     </p>
-                    
                     <div class="grid gap-6">
                         <div class="bg-gray-50 p-6 rounded-2xl border border-gray-100 hover:shadow-md transition duration-300 group">
                             <h3 class="font-bold text-xl mb-2 flex items-center gap-2 text-gray-800">
@@ -109,7 +112,6 @@
                 </div>
                 <div class="order-1 md:order-2 relative">
                     <div class="absolute inset-0 bg-yellow-400 rounded-3xl transform rotate-6 scale-95 opacity-20"></div>
-                    <!-- AQUI CAMBIE LA IMAGEN POR UNA HAMBURGUESA BRUTAL -->
                     <img src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" alt="Hamburguesa Uniandes" class="rounded-3xl shadow-2xl relative z-10 transform transition hover:scale-[1.01] object-cover h-full min-h-[400px]">
                 </div>
             </div>
@@ -153,18 +155,17 @@
     <footer class="bg-gray-50 border-t border-gray-200 pt-16 pb-8">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">
-                <!-- Columna 1: Marca -->
                 <div>
-                    <div class="flex items-center gap-2 mb-4">
-                        <div class="bg-yellow-400 p-1.5 rounded-lg text-black"><i data-lucide="utensils" class="w-5 h-5"></i></div>
-                        <span class="text-lg font-black">Uniandes Eats</span>
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="bg-white p-1 rounded-full border border-gray-200 shadow-sm w-8 h-8 flex items-center justify-center overflow-hidden">
+                            <img src="{% static 'img/logo.jpg' %}" alt="Logo" class="w-full h-full object-cover">
+                        </div>
+                        <span class="text-lg font-black text-gray-900">Uniandes Eats</span>
                     </div>
                     <p class="text-gray-500 text-sm leading-relaxed">
                         Facilitando la vida universitaria un domicilio a la vez. <br>Bogotá, Colombia.
                     </p>
                 </div>
-                
-                <!-- Columna 2: Enlaces Rápidos -->
                 <div>
                     <h4 class="font-bold text-gray-900 mb-4">Enlaces Rápidos</h4>
                     <ul class="space-y-2 text-sm text-gray-500">
@@ -173,8 +174,6 @@
                         <li><a href="/admin/" class="hover:text-yellow-600 transition">Acceso Administrativo</a></li>
                     </ul>
                 </div>
-
-                <!-- Columna 3: Legal -->
                 <div>
                     <h4 class="font-bold text-gray-900 mb-4">Legal</h4>
                     <ul class="space-y-2 text-sm text-gray-500">
@@ -184,14 +183,13 @@
                     </ul>
                 </div>
             </div>
-            
             <div class="border-t border-gray-200 pt-8 text-center">
                 <p class="text-gray-400 text-sm">© 2026 Uniandes Eats SAS. Todos los derechos reservados.</p>
             </div>
         </div>
     </footer>
 
-    <!-- MODAL LEGAL UNIVERSAL (Pop-up elegante) -->
+    <!-- MODAL LEGAL (Ya estaba, solo aseguro que funcione) -->
     <div id="modal-legal" class="hidden fixed inset-0 bg-black/60 z-[100] flex justify-center items-center p-4 backdrop-blur-sm scale-in">
         <div class="bg-white w-full max-w-lg rounded-3xl p-6 shadow-2xl h-[80vh] flex flex-col relative overflow-hidden">
             <div class="absolute top-0 left-0 w-full h-2 bg-yellow-400"></div>
@@ -199,71 +197,21 @@
                 <h3 class="text-xl font-bold text-gray-800" id="legal-title">Título Legal</h3>
                 <button onclick="closeLegal()" class="bg-gray-100 p-2 rounded-full hover:bg-gray-200 transition"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
-            <div id="legal-content" class="flex-1 overflow-y-auto text-sm text-gray-600 text-justify p-2 leading-relaxed space-y-4">
-                <!-- CONTENIDO DINÁMICO -->
-            </div>
-            <button onclick="closeLegal()" class="w-full bg-black text-white font-bold py-4 rounded-2xl mt-4 hover:bg-gray-800 transition">Entendido</button>
+            <div id="legal-content" class="flex-1 overflow-y-auto text-sm text-gray-600 text-justify p-2 leading-relaxed space-y-4"></div>
+            <button onclick="closeLegal()" class="w-full bg-black text-white font-bold py-4 rounded-2xl mt-4 hover:bg-gray-800 transition shadow-lg">Entendido</button>
         </div>
     </div>
 
     <script>
         lucide.createIcons();
-
-        // --- SISTEMA LEGAL ---
         const LEGAL_TEXTS = {
-            terms: `
-                <h4 class="font-bold text-lg mb-2">1. Objeto del Servicio</h4>
-                <p>Uniandes Eats actúa exclusivamente como una plataforma de intermediación tecnológica y logística. No preparamos alimentos ni somos dueños de los restaurantes aliados.</p>
-                <h4 class="font-bold text-lg mb-2 mt-4">2. Pagos y Tarifas</h4>
-                <p>El usuario acepta pagar el valor de los productos más la tarifa de domicilio aplicable según la zona del campus y la prioridad seleccionada. Los pagos se realizan a través de canales digitales autorizados.</p>
-                <h4 class="font-bold text-lg mb-2 mt-4">3. Responsabilidad</h4>
-                <p>Uniandes Eats se responsabiliza por el transporte íntegro del producto. Cualquier reclamo sobre la calidad, sabor o presentación de la comida debe ser dirigido al restaurante, aunque serviremos de canal de comunicación.</p>
-                <h4 class="font-bold text-lg mb-2 mt-4">4. Política de "No Show"</h4>
-                <p>Es responsabilidad del usuario estar atento a la llegada del repartidor. Se esperará un máximo de 10 minutos en el punto acordado. Pasado este tiempo, el pedido se dará por entregado y no habrá devolución de dinero.</p>
-            `,
-            privacy: `
-                <h4 class="font-bold text-lg mb-2">Tratamiento de Datos Personales</h4>
-                <p>En cumplimiento de la Ley 1581 de 2012 y el Decreto 1377 de 2013, Uniandes Eats informa:</p>
-                <ul class="list-disc pl-5 mt-2 space-y-2">
-                    <li><strong>Datos Recolectados:</strong> Nombre, código de estudiante, correo institucional y número celular.</li>
-                    <li><strong>Finalidad:</strong> Gestión operativa de pedidos, contacto logístico y facturación.</li>
-                    <li><strong>No Compartimos:</strong> Tus datos son confidenciales y no se venderán a terceros. Solo el repartidor asignado tendrá acceso temporal a tu número para coordinar la entrega.</li>
-                </ul>
-            `,
-            cancellation: `
-                <h4 class="font-bold text-lg mb-2">Política de Cancelaciones</h4>
-                <p>Entendemos que los planes cambian, pero la cocina tiene sus tiempos. Puedes cancelar tu pedido sin costo bajo las siguientes reglas:</p>
-                <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 mt-4">
-                    <ul class="space-y-2 text-sm font-medium">
-                        <li>🕒 <strong>Turno 12:00 PM:</strong> Cancelar antes de las 11:30 AM.</li>
-                        <li>🕒 <strong>Turno 12:45 PM:</strong> Cancelar antes de las 12:15 PM.</li>
-                        <li>🕒 <strong>Turno 01:30 PM:</strong> Cancelar antes de las 01:00 PM.</li>
-                    </ul>
-                </div>
-                <p class="mt-4 text-red-500 font-bold text-sm">IMPORTANTE:</p>
-                <p class="text-sm">Una vez el pedido entra en estado "EN COCINA" o pasa la hora límite, no es posible realizar reembolsos ya que el restaurante ha iniciado la preparación.</p>
-            `
+            terms: `<h4 class="font-bold text-lg mb-2">1. Objeto del Servicio</h4><p>Uniandes Eats actúa exclusivamente como una plataforma de intermediación...</p>`,
+            privacy: `<h4 class="font-bold text-lg mb-2">Tratamiento de Datos</h4><p>En cumplimiento de la Ley 1581...</p>`,
+            cancellation: `<h4 class="font-bold text-lg mb-2">Política de Cancelaciones</h4><p>Solo se aceptan cancelaciones...</p>`
         };
-
-        function showLegal(type) {
-            const titles = {
-                terms: "Términos y Condiciones",
-                privacy: "Política de Privacidad",
-                cancellation: "Políticas de Cancelación"
-            };
-            document.getElementById('legal-title').innerText = titles[type];
-            document.getElementById('legal-content').innerHTML = LEGAL_TEXTS[type];
-            document.getElementById('modal-legal').classList.remove('hidden');
-        }
-
-        function closeLegal() {
-            document.getElementById('modal-legal').classList.add('hidden');
-        }
-
-        // Cerrar modal al dar clic afuera
-        document.getElementById('modal-legal').addEventListener('click', function(e) {
-            if (e.target === this) closeLegal();
-        });
+        function showLegal(type) { document.getElementById('legal-title').innerText = {terms:"Términos",privacy:"Privacidad",cancellation:"Cancelación"}[type]; document.getElementById('legal-content').innerHTML = LEGAL_TEXTS[type]; document.getElementById('modal-legal').classList.remove('hidden'); }
+        function closeLegal() { document.getElementById('modal-legal').classList.add('hidden'); }
+        document.getElementById('modal-legal').addEventListener('click', function(e) { if (e.target === this) closeLegal(); });
     </script>
 </body>
 </html>

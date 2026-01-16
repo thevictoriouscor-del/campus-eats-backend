@@ -1,4 +1,5 @@
 import json 
+import threading # <--- IMPORTANTE: Para enviar correos sin bloquear
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action 
 from rest_framework.views import APIView 
@@ -9,6 +10,30 @@ from django.contrib.auth import authenticate, login, logout
 from django.db.models import Q
 from .models import User, Restaurante, Producto, Pedido, DetallePedido
 from .serializers import RestauranteSerializer, ProductoSerializer, PedidoSerializer, RegistroSerializer, VerificacionSerializer
+
+# -----------------------------------------------------------------------------
+# CLASE PARA ENVIAR CORREOS EN SEGUNDO PLANO (ANTI-TIMEOUT)
+# -----------------------------------------------------------------------------
+class EmailThread(threading.Thread):
+    def __init__(self, subject, message, from_email, recipient_list):
+        self.subject = subject
+        self.message = message
+        self.from_email = from_email
+        self.recipient_list = recipient_list
+        threading.Thread.__init__(self)
+
+    def run(self):
+        try:
+            send_mail(
+                self.subject, 
+                self.message, 
+                self.from_email, 
+                self.recipient_list, 
+                fail_silently=False
+            )
+            print("✅ Correo enviado exitosamente en segundo plano")
+        except Exception as e:
+            print(f"❌ Error enviando correo en segundo plano: {e}")
 
 # -----------------------------------------------------------------------------
 # MAPA DE TARIFAS
@@ -72,10 +97,8 @@ class PedidoViewSet(viewsets.ModelViewSet):
             costo_domicilio_base = TARIFAS_DOMICILIO.get(edificio, TARIFA_DEFAULT)
             tipo_entrega = request.data.get('tipo_entrega', 'NORMAL')
             costo_extra = 2000 if tipo_entrega == 'PRIORITARIA' else (-1000 if tipo_entrega == 'FLEXIBLE' else 0)
-            
             try: propina = int(request.data.get('propina', 0))
             except: propina = 0
-            
             costo_domicilio_total = costo_domicilio_base + costo_extra
             total_comida = 0
             productos_validos = []
@@ -86,20 +109,16 @@ class PedidoViewSet(viewsets.ModelViewSet):
                     total_comida += subtotal
                     productos_validos.append({'producto': prod_db, 'cantidad': int(item['cantidad']), 'precio': prod_db.precio})
                 except Producto.DoesNotExist: pass
-            
             total_final = total_comida + costo_domicilio_total + propina
             datos_pedido = request.data.copy()
             datos_pedido['total_pagar'] = total_final
             datos_pedido['costo_domicilio'] = costo_domicilio_total
             datos_pedido['propina'] = propina
-            
             serializer = self.get_serializer(data=datos_pedido, partial=True)
             serializer.is_valid(raise_exception=True)
             pedido = serializer.save(cliente=self.request.user, total_pagar=total_final, costo_domicilio=costo_domicilio_total, propina=propina)
-
             for p in productos_validos:
                 DetallePedido.objects.create(pedido=pedido, producto=p['producto'], cantidad=p['cantidad'], precio_unitario=p['precio'])
-
             headers = self.get_success_headers(serializer.data)
             return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
         except Exception as e:
@@ -133,23 +152,18 @@ class RegistroView(APIView):
                 
                 print(f"\n{'='*40}\n📧 CÓDIGO RESPALDO: {codigo}\n{'='*40}\n")
                 
-                # BLINDAJE DE CORREO
-                try:
-                    send_mail(
-                        'Tu código de verificación - Uniandes Eats',
-                        f'Hola {user.nombre_completo}, bienvenido.\n\nTu código es: {codigo}',
-                        'contacto@andeseats.com', 
-                        [user.email],
-                        fail_silently=False,
-                    )
-                except Exception as e:
-                    print(f"❌ ERROR CORREO (Pero continuamos): {e}")
+                # --- AQUÍ USAMOS EL HILO PARA NO BLOQUEAR ---
+                EmailThread(
+                    'Tu código de verificación - Uniandes Eats',
+                    f'Hola {user.nombre_completo}, bienvenido.\n\nTu código es: {codigo}',
+                    'contacto@andeseats.com', # Asegúrate que coincida con tu variable en Render
+                    [user.email]
+                ).start()
                 
                 return Response({"mensaje": "Usuario creado.", "email": user.email}, status=status.HTTP_201_CREATED)
             
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
-            # Captura errores generales para no dar 500 HTML
             print(f"❌ ERROR GENERAL REGISTRO: {e}")
             return Response({"error": f"Error interno: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
 

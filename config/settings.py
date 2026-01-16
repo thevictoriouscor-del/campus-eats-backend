@@ -8,11 +8,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-tu-clave-secreta-aqui')
 
-# SECURITY WARNING: don't run with debug turned on in production!
+# DEBUG: False en producción (Render)
 DEBUG = 'RENDER' not in os.environ
 
-# AQUI AGREGAMOS TU DOMINIO OFICIAL PARA QUE DJANGO LO ACEPTE
 ALLOWED_HOSTS = ['*', 'andeseats.com', 'www.andeseats.com']
+
+# SEGURIDAD HTTPS
+CSRF_TRUSTED_ORIGINS = [
+    'https://andeseats.com',
+    'https://www.andeseats.com',
+    'https://campus-eats-backend-absk.onrender.com',
+]
 
 INSTALLED_APPS = [
     'jazzmin',
@@ -58,7 +64,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-# BASE DE DATOS
 DATABASES = {
     'default': dj_database_url.config(
         default=f'sqlite:///{BASE_DIR / "db.sqlite3"}',
@@ -88,20 +93,23 @@ MEDIA_ROOT = BASE_DIR / 'media'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'core.User'
 
-# --- CONFIGURACIÓN DE CORREO UNIVERSAL (Hostinger o Gmail) ---
-# Usaremos contacto@andeseats.com
+# --- CONFIGURACIÓN DE CORREO INTELIGENTE (SSL/TLS) ---
 if 'EMAIL_HOST_USER' in os.environ:
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-    # Ahora leemos el Host y Puerto de las variables de Render
-    # Si no las pones, usa Gmail por defecto.
     EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
     EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
-    EMAIL_USE_TLS = True
     EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
     EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
     DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+    
+    # Lógica automática para Hostinger (Puerto 465 = SSL)
+    if EMAIL_PORT == 465:
+        EMAIL_USE_SSL = True
+        EMAIL_USE_TLS = False
+    else:
+        EMAIL_USE_SSL = False
+        EMAIL_USE_TLS = True
 else:
-    # Modo local (Consola)
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # Seguridad de Sesiones
@@ -110,7 +118,6 @@ SESSION_SAVE_EVERY_REQUEST = True
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 LOGOUT_REDIRECT_URL = '/admin/login/'
 
-# Diseño Admin (ACTUALIZADO CON TU NUEVA MARCA)
 JAZZMIN_SETTINGS = {
     "site_title": "Andes Eats Admin",
     "site_header": "Andes Eats",
