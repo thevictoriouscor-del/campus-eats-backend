@@ -50,15 +50,15 @@ class PedidoSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'cliente', 'cliente_info', 'repartidor', 'repartidor_info',
             'edificio_entrega', 'detalle_ubicacion', 
-            'estado', 'total_pagar', 'costo_domicilio', 'propina', # <--- CON PROPINA
+            'estado', 'total_pagar', 'costo_domicilio', 'propina', 
             'comprobante_pago', 'fecha_creacion', 'items',
-            'jornada_entrega', 'tipo_entrega' # <--- JORNADAS Y PRIORIDAD
+            'jornada_entrega', 'tipo_entrega'
         ]
         # Estos campos los llena el sistema automáticamente, no el usuario
         extra_kwargs = {'cliente': {'read_only': True}, 'repartidor': {'read_only': True}}
 
 # -----------------------------------------------------------------------------
-# 6. REGISTRO (CON REGLAS DE NEGOCIO)
+# 6. REGISTRO (CON REGLAS DE NEGOCIO Y VALIDACIÓN CORREO)
 # -----------------------------------------------------------------------------
 class RegistroSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
@@ -68,8 +68,21 @@ class RegistroSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['email', 'codigo_estudiante', 'nombre_completo', 'celular', 'password', 'rol', 'es_aspirante']
-        extra_kwargs = {'rol': {'read_only': True}} # El rol se asigna internamente
+        extra_kwargs = {'rol': {'read_only': True}} 
     
+    # --- VALIDACIÓN DE CORREO UNIANDES ---
+    def validate_email(self, value):
+        # Normalizamos a minúsculas para comparar
+        email = value.lower()
+        if not email.endswith('@uniandes.edu.co'):
+            raise serializers.ValidationError("⚠️ Debes usar tu correo institucional (@uniandes.edu.co)")
+        
+        # Verificar si ya existe (para dar un mensaje más claro que el default de Django)
+        if User.objects.filter(email=email).exists():
+            raise serializers.ValidationError("Este correo ya está registrado.")
+            
+        return email
+
     def create(self, validated_data):
         es_aspirante = validated_data.pop('es_aspirante', False)
         

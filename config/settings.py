@@ -8,16 +8,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-tu-clave-secreta-aqui')
 
-# DEBUG: False en producción (Render)
+# DEBUG: False en producción (Render), True en local
 DEBUG = 'RENDER' not in os.environ
 
+# AQUI AGREGAMOS TU DOMINIO OFICIAL PARA QUE DJANGO LO ACEPTE
 ALLOWED_HOSTS = ['*', 'andeseats.com', 'www.andeseats.com']
 
-# SEGURIDAD HTTPS
+# --- SEGURIDAD HTTPS (CRÍTICO PARA LOGIN Y CSRF) ---
 CSRF_TRUSTED_ORIGINS = [
     'https://andeseats.com',
     'https://www.andeseats.com',
-    'https://campus-eats-backend-absk.onrender.com',
+    'https://*.onrender.com', # Comodín para cualquier subdominio de render
 ]
 
 INSTALLED_APPS = [
@@ -64,6 +65,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
+# BASE DE DATOS
 DATABASES = {
     'default': dj_database_url.config(
         default=f'sqlite:///{BASE_DIR / "db.sqlite3"}',
@@ -93,23 +95,28 @@ MEDIA_ROOT = BASE_DIR / 'media'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'core.User'
 
-# --- CONFIGURACIÓN DE CORREO INTELIGENTE (SSL/TLS) ---
+# --- CONFIGURACIÓN DE CORREO INTELIGENTE (SSL/TLS FIX) ---
 if 'EMAIL_HOST_USER' in os.environ:
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-    EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
-    EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
+    
+    # 1. Leemos la configuración de Render
+    EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.hostinger.com')
+    EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 465))
     EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
     EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
     DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
     
-    # Lógica automática para Hostinger (Puerto 465 = SSL)
+    # 2. Lógica automática de seguridad según el puerto
     if EMAIL_PORT == 465:
-        EMAIL_USE_SSL = True
+        EMAIL_USE_SSL = True   # Hostinger SSL (Puerto 465)
         EMAIL_USE_TLS = False
     else:
         EMAIL_USE_SSL = False
-        EMAIL_USE_TLS = True
+        EMAIL_USE_TLS = True   # Estándar TLS (Puerto 587)
+        
+    EMAIL_TIMEOUT = 10 
 else:
+    # Modo local (Consola)
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # Seguridad de Sesiones
@@ -118,6 +125,7 @@ SESSION_SAVE_EVERY_REQUEST = True
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 LOGOUT_REDIRECT_URL = '/admin/login/'
 
+# Diseño Admin
 JAZZMIN_SETTINGS = {
     "site_title": "Andes Eats Admin",
     "site_header": "Andes Eats",
