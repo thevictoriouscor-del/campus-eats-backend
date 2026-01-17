@@ -6,21 +6,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Uniandes Eats</title>
     <!-- FAVICON -->
-    <link rel="icon" href="{% static 'img/logo.jpg' %}?v=9" type="image/jpeg">
-    <link rel="shortcut icon" href="{% static 'img/logo.jpg' %}?v=9" type="image/jpeg">
+    <link rel="icon" href="{% static 'img/logo.jpg' %}?v=10" type="image/jpeg">
+    <link rel="shortcut icon" href="{% static 'img/logo.jpg' %}?v=10" type="image/jpeg">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        .fade-in { animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
         .hidden-screen { display: none !important; }
         .toast-enter { transform: translateY(-100%); opacity: 0; transition: all 0.3s ease-out; }
         .toast-visible { transform: translateY(0); opacity: 1; }
         .scale-in { animation: scaleIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         @keyframes scaleIn { from { transform: scale(0); } to { transform: scale(1); } }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .valid-crit { color: #16a34a; font-weight: bold; transition: color 0.3s; }
-        .invalid-crit { color: #9ca3af; transition: color 0.3s; }
+        .valid-crit { color: #16a34a; font-weight: bold; }
+        .invalid-crit { color: #9ca3af; }
         .ping { animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite; }
         @keyframes ping { 75%, 100% { transform: scale(2); opacity: 0; } }
     </style>
@@ -28,9 +28,10 @@
 <body class="bg-gray-100 font-sans text-gray-800 h-screen flex justify-center items-center p-4 selection:bg-yellow-200 bg-cover bg-center relative" style="background-image: url('https://images.unsplash.com/photo-1541339907198-e08756dedf3f?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80');">
     
     <div class="absolute inset-0 bg-black/60 backdrop-blur-sm z-0"></div>
+    <!-- Token de seguridad inyectado por Django -->
     <script>const CSRF_TOKEN = '{{ csrf_token }}';</script>
     
-    <div class="w-full md:max-w-[95%] h-full md:h-[95vh] bg-white sm:rounded-3xl shadow-2xl overflow-hidden relative flex flex-col transition-all duration-500 ease-out z-10 border border-white/20">
+    <div class="w-full md:max-w-7xl h-full md:h-[95vh] bg-white sm:rounded-3xl shadow-2xl overflow-hidden relative flex flex-col transition-all duration-500 ease-out z-10 border border-white/20">
         
         <!-- TOAST -->
         <div id="toast-container" class="absolute top-4 left-0 right-0 z-50 pointer-events-none toast-enter flex justify-center">
@@ -40,12 +41,8 @@
         <!-- HEADER -->
         <div class="bg-yellow-400 p-4 md:p-6 text-center md:text-left md:flex md:justify-between md:items-center rounded-b-[2rem] shadow-md z-10 relative">
             <div class="absolute top-4 left-4 right-4 md:static md:order-2 md:w-auto flex justify-between md:gap-4">
-                <!-- AQUÍ ESTABA EL ERROR: FALTABA EL ID user-name -->
                 <div id="user-info" class="text-xs font-bold hidden bg-white/30 px-3 py-1.5 rounded-lg backdrop-blur-sm flex items-center gap-2 transition hover:bg-white/50">
-                    <i data-lucide="user" class="w-3 h-3"></i> 
-                    <span id="user-name">Usuario</span> <!-- ID RECUPERADO -->
-                    <span class="opacity-50">|</span>
-                    <span id="user-role-label" class="uppercase text-[10px] tracking-wide opacity-70">Rol</span>
+                    <i data-lucide="user" class="w-3 h-3"></i> <span id="user-role-label"></span>
                 </div>
                 <button id="btn-logout" onclick="tryLogout()" class="text-xs font-bold bg-black text-white px-4 py-1.5 rounded-full hidden hover:bg-gray-800 transition shadow-lg hover:scale-105 active:scale-95">Salir</button>
             </div>
@@ -70,7 +67,7 @@
                     <div class="relative">
                         <input type="password" id="login-password" placeholder="Contraseña" class="w-full p-4 bg-white rounded-xl border border-gray-200 focus:border-yellow-400 focus:ring-2 focus:ring-yellow-100 outline-none transition font-medium pr-12" required>
                         <button type="button" onclick="togglePassword('login-password')" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-black focus:outline-none p-1"><i data-lucide="eye" class="w-5 h-5"></i></button>
-                        <div class="text-right mt-1"><a href="#" onclick="showToast('Contacta a soporte@andeseats.com', true)" class="text-xs text-gray-500 hover:text-yellow-600 font-semibold transition">¿Olvidaste tu contraseña?</a></div>
+                        <div class="text-right mt-1"><a href="#" onclick="showToast('Contacta a contacto@andeseats.com', true)" class="text-xs text-gray-500 hover:text-yellow-600 font-semibold transition">¿Olvidaste tu contraseña?</a></div>
                     </div>
                     <button type="submit" class="w-full bg-black text-white font-bold py-4 rounded-xl shadow-lg hover:bg-gray-800 transition transform active:scale-95">ENTRAR</button>
                 </form>
@@ -86,18 +83,21 @@
                 </div>
             </div>
 
-            <!-- 2. REGISTRO USUARIO -->
+            <!-- 2. REGISTRO (ESTUDIANTE / PROFESOR) -->
             <div id="screen-register" class="hidden-screen fade-in space-y-4 max-w-md mx-auto">
                 <button onclick="showScreen('screen-login')" class="flex items-center text-gray-400 hover:text-black mb-2 transition hover:-translate-x-1"><i data-lucide="arrow-left" class="w-5 h-5 mr-1"></i> Volver</button>
                 <h2 class="text-xl font-bold text-gray-700">Crear Cuenta</h2>
+                
                 <form id="form-register" class="space-y-3" onsubmit="doRegister(event, false)">
                     <div class="flex gap-2 mb-2">
                         <label class="flex-1 cursor-pointer"><input type="radio" name="rol_tipo" value="ESTUDIANTE" checked class="peer hidden"><div class="text-center p-2 border rounded-lg peer-checked:bg-yellow-400 peer-checked:font-bold peer-checked:border-yellow-400 text-sm transition">Estudiante</div></label>
                         <label class="flex-1 cursor-pointer"><input type="radio" name="rol_tipo" value="PROFESOR" class="peer hidden"><div class="text-center p-2 border rounded-lg peer-checked:bg-black peer-checked:text-white peer-checked:font-bold peer-checked:border-black text-sm transition">Profesor</div></label>
                     </div>
+
                     <input type="text" id="reg-nombre" placeholder="Nombre Completo" class="w-full p-3 border rounded-xl" required>
                     <input type="text" id="reg-codigo" placeholder="Código / Cédula" class="w-full p-3 border rounded-xl" required>
                     <input type="email" id="reg-email" placeholder="Correo @uniandes.edu.co" class="w-full p-3 border rounded-xl" required>
+                    <!-- CAMPO CELULAR -->
                     <input type="tel" id="reg-celular" placeholder="Celular" class="w-full p-3 border rounded-xl" required>
                     
                     <div class="relative">
@@ -111,7 +111,11 @@
                             <span id="reg-c-spec" class="invalid-crit flex items-center"><i data-lucide="circle" class="w-3 h-3 mr-1"></i> Especial (!@#)</span>
                         </div>
                     </div>
-                    <div class="flex items-start space-x-2 pt-2 px-1"><input type="checkbox" required class="mt-1 accent-yellow-400 w-4 h-4 cursor-pointer"><div class="text-xs text-gray-500 leading-tight">Acepto los <a href="#" onclick="showLegal('terms')" class="underline text-black font-bold hover:text-yellow-600">Términos</a> y <a href="#" onclick="showLegal('privacy')" class="underline text-black font-bold hover:text-yellow-600">Política</a>.</div></div>
+                    
+                    <div class="flex items-start space-x-2 pt-2 px-1">
+                        <input type="checkbox" required class="mt-1 accent-yellow-400 w-4 h-4 cursor-pointer">
+                        <div class="text-xs text-gray-500 leading-tight">Acepto los <a href="#" onclick="showLegal('terms')" class="underline text-black font-bold hover:text-yellow-600">Términos</a> y <a href="#" onclick="showLegal('privacy')" class="underline text-black font-bold hover:text-yellow-600">Política</a>.</div>
+                    </div>
                     <button type="submit" class="w-full bg-yellow-400 font-bold py-3 rounded-xl shadow-md hover:bg-yellow-300 transition transform active:scale-95 text-black">REGISTRARME</button>
                 </form>
             </div>
@@ -126,6 +130,7 @@
                     <input type="text" id="cour-codigo" placeholder="Código Estudiante" class="w-full p-3 border rounded-xl" required>
                     <input type="email" id="cour-email" placeholder="Correo Institucional" class="w-full p-3 border rounded-xl" required>
                     <input type="tel" id="cour-celular" placeholder="Celular (Obligatorio)" class="w-full p-3 border rounded-xl" required>
+                    
                     <div class="relative">
                         <input type="password" id="cour-pass" placeholder="Contraseña Segura" class="w-full p-3 border rounded-xl pr-12" required onkeyup="validatePassword('cour')">
                         <button type="button" onclick="togglePassword('cour-pass')" class="absolute right-3 top-3 text-gray-400 hover:text-black focus:outline-none p-1"><i data-lucide="eye" class="w-5 h-5"></i></button>
@@ -137,7 +142,10 @@
                             <span id="cour-c-spec" class="invalid-crit flex items-center"><i data-lucide="circle" class="w-3 h-3 mr-1"></i> Especial (!@#)</span>
                         </div>
                     </div>
-                    <div class="bg-yellow-50 p-3 rounded-lg text-xs text-yellow-800"><input type="checkbox" required class="mr-2"> He leído y acepto el <a href="#" onclick="showLegal('courier_agreement')" class="underline font-bold hover:text-black">Contrato de Colaboración</a>.</div>
+
+                    <div class="bg-yellow-50 p-3 rounded-lg text-xs text-yellow-800">
+                        <input type="checkbox" required class="mr-2"> He leído y acepto el <a href="#" onclick="showLegal('courier_agreement')" class="underline font-bold hover:text-black">Contrato de Colaboración</a>.
+                    </div>
                     <button type="submit" class="w-full bg-black text-white font-bold py-3 rounded-xl shadow-md">ENVIAR SOLICITUD</button>
                 </form>
             </div>
@@ -154,6 +162,7 @@
 
             <!-- PANEL CLIENTE -->
             <div id="client-view" class="hidden-screen">
+                <!-- MENÚ -->
                 <div id="screen-menu" class="space-y-6">
                     <div id="active-orders-section" class="hidden">
                         <h3 class="font-bold text-gray-800 text-sm mb-3 px-1 flex items-center">
@@ -161,17 +170,20 @@
                         </h3>
                         <div id="active-orders-container" class="space-y-4"></div>
                     </div>
-                    <div class="flex justify-between items-end border-b border-gray-200 pb-3 mt-4 sticky top-0 bg-gray-50 z-20 pt-2">
+                    
+                    <div class="flex justify-between items-end border-b border-gray-200 pb-3 mt-4 sticky top-0 bg-gray-50 z-20 pt-2 backdrop-blur-sm">
                         <h2 class="text-xl font-bold text-gray-800">Restaurantes</h2>
                         <button onclick="loadMyOrders(); showScreen('screen-history')" class="text-xs text-gray-600 font-bold bg-white border border-gray-200 px-3 py-1.5 rounded-full hover:bg-gray-100 flex gap-1 transition shadow-sm"><i data-lucide="history" class="w-3 h-3"></i> Historial</button>
                     </div>
                     <div id="restaurants-container" class="space-y-5 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-6"></div>
                 </div>
 
+                <!-- CHECKOUT CON PROPINA -->
                 <div id="screen-cart" class="hidden-screen fade-in space-y-4 max-w-lg mx-auto">
                     <button onclick="showScreen('screen-menu')" class="mb-2 flex items-center text-gray-400 hover:text-black transition"><i data-lucide="chevron-left" class="w-5 h-5"></i> Seguir pidiendo</button>
                     <h2 class="text-2xl font-bold text-gray-800 mb-4">Tu Pedido</h2>
                     <div id="cart-items" class="bg-white p-4 rounded-xl border"></div>
+                    
                     <div class="space-y-3 pt-4">
                         <h3 class="font-bold text-sm text-gray-600">Opciones</h3>
                         <select id="cart-jornada" class="w-full p-3 border rounded-xl text-sm mb-2"><option value="12:00 - 12:45">Almuerzo Temprano</option><option value="12:45 - 13:30" selected>Almuerzo Pico</option><option value="13:30 - 14:15">Almuerzo Tarde</option></select>
@@ -182,7 +194,18 @@
                         <h3 class="font-bold text-sm text-gray-600 mt-4">Propina ❤️</h3>
                         <div class="grid grid-cols-4 gap-2"><button onclick="setTip(0)" id="tip-0" class="tip-btn bg-black text-white p-3 rounded-xl text-xs font-bold transition">No</button><button onclick="setTip(1000)" id="tip-1000" class="tip-btn bg-gray-200 text-gray-600 p-3 rounded-xl text-xs font-bold transition">$1k</button><button onclick="setTip(2000)" id="tip-2000" class="tip-btn bg-gray-200 text-gray-600 p-3 rounded-xl text-xs font-bold transition">$2k</button><button onclick="setTip(3000)" id="tip-3000" class="tip-btn bg-gray-200 text-gray-600 p-3 rounded-xl text-xs font-bold transition">$3k</button></div><input type="hidden" id="cart-tip" value="0">
                     </div>
-                    <div class="space-y-4 pt-6 border-t border-gray-200 mt-6"><h3 class="font-bold text-sm text-gray-600 uppercase tracking-wide">Pago</h3><label class="block w-full p-6 border-2 border-dashed border-gray-300 rounded-2xl text-center cursor-pointer hover:bg-yellow-50 hover:border-yellow-400 transition group" id="drop-area"><input type="file" id="cart-comprobante" accept="image/*" class="hidden" onchange="previewFile()"><div id="file-preview" class="flex flex-col items-center text-gray-400 group-hover:text-yellow-600 transition"><i data-lucide="image-plus" class="w-10 h-10 mb-2"></i><span class="text-xs font-bold">Toca para subir Nequi/DaviPlata</span></div></label></div>
+
+                    <div class="space-y-4 pt-6 border-t border-gray-200 mt-6">
+                        <h3 class="font-bold text-sm text-gray-600 uppercase tracking-wide">Pago</h3>
+                        <label class="block w-full p-6 border-2 border-dashed border-gray-300 rounded-2xl text-center cursor-pointer hover:bg-yellow-50 hover:border-yellow-400 transition group" id="drop-area">
+                            <input type="file" id="cart-comprobante" accept="image/*" class="hidden" onchange="previewFile()">
+                            <div id="file-preview" class="flex flex-col items-center text-gray-400 group-hover:text-yellow-600 transition">
+                                <i data-lucide="image-plus" class="w-10 h-10 mb-2"></i>
+                                <span class="text-xs font-bold">Toca para subir Nequi/DaviPlata</span>
+                            </div>
+                        </label>
+                    </div>
+
                     <div class="space-y-2 pt-6 border-t border-gray-200 text-sm mt-6"><div class="flex justify-between text-gray-500"><span>Comida:</span><span id="summary-food">$0</span></div><div class="flex justify-between text-gray-500"><span>Domicilio:</span><span id="summary-delivery">$0</span></div><div class="flex justify-between text-green-600 font-bold"><span>Propina:</span><span id="summary-tip">$0</span></div><div class="flex justify-between font-black text-2xl pt-2 text-gray-900 border-t border-gray-100 mt-2"><span>Total:</span><span id="cart-total-final">$0</span></div></div>
                     <button onclick="placeOrder()" class="w-full bg-green-500 text-white font-black py-4 rounded-2xl mt-6 mb-24 shadow-xl hover:bg-green-600 transition transform active:scale-95 flex items-center justify-center gap-2">CONFIRMAR PEDIDO <i data-lucide="check" class="w-5 h-5"></i></button>
                 </div>
@@ -200,12 +223,15 @@
         <div id="cart-float" onclick="showScreen('screen-cart')" class="hidden absolute bottom-6 right-6 md:left-auto md:w-96 bg-black text-white p-4 rounded-2xl shadow-2xl flex justify-between items-center cursor-pointer hover:bg-gray-800 transition transform hover:scale-105 scale-in z-40 border border-yellow-500/30"><div class="flex items-center gap-3"><div class="bg-yellow-400 text-black w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shadow-md" id="cart-count">0</div><span class="font-bold text-sm">Ver Pedido</span></div><span class="font-bold text-lg" id="cart-total">$0</span></div>
         <div id="loading" class="hidden absolute inset-0 bg-white/80 backdrop-blur-sm flex justify-center items-center z-50 rounded-3xl"><div class="animate-spin text-yellow-500 mb-2"><i data-lucide="loader-2" class="w-12 h-12"></i></div></div>
         
+        <!-- MODAL LEGAL -->
         <div id="modal-legal" class="hidden fixed inset-0 bg-black/60 z-[60] flex justify-center items-center p-4 backdrop-blur-sm scale-in"><div class="bg-white w-full max-w-lg rounded-3xl p-6 shadow-2xl h-[80vh] flex flex-col relative overflow-hidden"><div class="absolute top-0 left-0 w-full h-2 bg-yellow-400"></div><div class="flex justify-between mb-4 border-b pb-4"><h3 class="text-xl font-bold text-gray-800" id="legal-title"></h3><button onclick="closeLegal()" class="bg-gray-100 p-2 rounded-full hover:bg-gray-200 transition"><i data-lucide="x" class="w-5 h-5"></i></button></div><div id="legal-content" class="flex-1 overflow-y-auto text-sm text-gray-600 text-justify p-2 leading-relaxed"></div><button onclick="closeLegal()" class="w-full bg-black text-white font-bold py-4 rounded-2xl mt-4 hover:bg-gray-800 transition">Entendido</button></div></div>
         
+        <!-- MODAL DETALLE PEDIDO -->
         <div id="modal-order-detail" class="hidden fixed inset-0 bg-black/50 z-50 flex justify-center items-end sm:items-center backdrop-blur-sm"><div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl scale-in"><div class="flex justify-between items-center mb-4"><h3 class="text-lg font-bold">Detalle</h3><button onclick="closeModal()" class="bg-gray-100 p-2 rounded-full"><i data-lucide="x" class="w-4 h-4"></i></button></div><div id="modal-content" class="space-y-4 mb-6 max-h-64 overflow-y-auto pr-2"></div><button id="btn-cancel-order" class="w-full border-2 border-red-100 text-red-500 font-bold py-3 rounded-2xl hover:bg-red-50 transition hidden">Cancelar Pedido</button><p id="msg-cancel-locked" class="text-xs text-gray-400 text-center mt-2 hidden">No se puede cancelar</p><a id="btn-whatsapp-courier" href="#" target="_blank" class="w-full bg-green-500 text-white font-bold py-3 rounded-2xl hover:bg-green-600 transition mt-3 flex items-center justify-center gap-2 hidden"><i data-lucide="message-circle" class="w-5 h-5"></i> Contactar Repartidor</a><div class="mt-4 pt-4 border-t text-center"><p class="text-[10px] text-gray-400"><a href="#" onclick="showLegal('cancellation')" class="underline font-bold text-gray-500">Políticas de Cancelación</a></p></div></div></div>
 
         <div id="modal-confirm" class="hidden fixed inset-0 bg-black/60 z-[60] flex justify-center items-center backdrop-blur-sm"><div class="bg-white w-80 rounded-3xl p-8 text-center scale-in shadow-2xl"><div class="bg-yellow-100 text-yellow-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce"><i data-lucide="alert-circle" class="w-8 h-8"></i></div><h3 class="text-xl font-black text-gray-900 mb-2" id="confirm-title"></h3><p class="text-sm text-gray-500 mb-8 leading-relaxed" id="confirm-desc"></p><div class="flex gap-3"><button onclick="closeConfirm()" class="flex-1 bg-gray-100 text-gray-600 font-bold py-3 rounded-2xl hover:bg-gray-200 transition">No</button><button id="confirm-yes-btn" class="flex-1 bg-black text-white font-bold py-3 rounded-2xl hover:bg-gray-800 transition shadow-lg">Sí</button></div></div></div>
 
+        <!-- PANTALLAS EXITO E HISTORIAL -->
         <div id="screen-order-success" class="hidden-screen fade-in space-y-6 pt-10 max-w-md mx-auto text-center"><div class="bg-green-100 text-green-600 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl animate-[bounce_1s_infinite]"><i data-lucide="check" class="w-12 h-12"></i></div><h2 class="text-3xl font-black text-gray-900">¡Pedido Enviado!</h2><p class="text-gray-500">Tu pedido <span id="success-order-id" class="font-bold text-black bg-yellow-200 px-2 rounded">#0</span> ha sido recibido.</p><div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 text-left space-y-4 mt-8"><div class="flex justify-between border-b border-gray-50 pb-3"><span class="text-gray-400 text-xs font-bold uppercase tracking-wider">Estado</span><span id="success-order-status" class="bg-yellow-100 text-yellow-800 text-xs font-bold px-3 py-1 rounded-full">Pendiente</span></div><div class="flex justify-between border-b border-gray-50 pb-3"><span class="text-gray-400 text-xs font-bold uppercase tracking-wider">Total</span><span id="success-order-total" class="font-bold text-lg">$0</span></div><div><span class="text-gray-400 text-xs font-bold uppercase tracking-wider block mb-1">Ubicación</span><p id="success-order-location" class="text-sm text-gray-800 font-medium">...</p></div></div><div class="space-y-3 mt-8"><button onclick="showScreen('screen-menu')" class="w-full bg-black text-white font-bold py-4 rounded-2xl hover:bg-gray-800 transition shadow-lg">Volver al Menú</button><button onclick="loadMyOrders(); showScreen('screen-history')" class="w-full text-gray-500 font-bold text-sm hover:text-black py-3">Ver Historial</button></div></div>
         <div id="screen-history" class="hidden-screen fade-in space-y-4 max-w-3xl mx-auto"><button onclick="showScreen('screen-menu')" class="flex items-center text-gray-400 hover:text-black mb-4 transition font-bold"><i data-lucide="arrow-left" class="w-5 h-5 mr-1"></i> Volver</button><h2 class="text-2xl font-bold text-gray-900 mb-6">Mis Pedidos</h2><div id="history-container" class="space-y-4"></div></div>
     </div>
@@ -220,17 +246,17 @@
         function togglePassword(id){const i=document.getElementById(id); i.type=i.type==='password'?'text':'password'; lucide.createIcons();}
 
         async function apiCall(url, method, body, isFormData) {
-            const headers = {}; let token = getCookie('csrftoken'); 
-            // FIX: Usar CSRF_TOKEN del template si está disponible
-            if(typeof CSRF_TOKEN !== 'undefined') token = CSRF_TOKEN;
-            if(token) headers['X-CSRFToken']=token;
-
+            const headers = {}; let token = getCookie('csrftoken'); if(token) headers['X-CSRFToken']=token;
             if(!isFormData) headers['Content-Type']='application/json';
             const config = { method, headers };
             if (body && method !== 'GET' && method !== 'DELETE') config.body = isFormData ? body : JSON.stringify(body);
             
+            // AGREGAMOS 'credentials' Y 'mode' PARA EVITAR EL ERROR 403 EN CORS
+            config.credentials = 'same-origin';
+            config.mode = 'cors';
+
             const response = await fetch(url, config);
-            if(method === 'DELETE' && response.status === 204) return {};
+            if(method === 'DELETE' && response.status === 204) return {}; 
             
             const contentType = response.headers.get("content-type");
             if (contentType && contentType.indexOf("application/json") !== -1) { 
@@ -238,12 +264,11 @@
                 if (!response.ok) throw new Error(data.error || JSON.stringify(data)); 
                 return data; 
             } else { 
-                console.error("Error HTML:", await response.text()); 
-                throw new Error("Error del servidor (Revisar consola)."); 
+                const text = await response.text(); console.error("Error no JSON:", text); throw new Error("Error del servidor (Revisar consola)."); 
             }
         }
 
-        // DEFINICIÓN SEGURA DE FUNCIONES GLOBALES
+        // --- FUNCIONES GLOBALES (Window) ---
         window.doLogin = async function(e) {
             e.preventDefault(); toggleLoading(true);
             try {
@@ -328,7 +353,7 @@
         
         window.previewFile = function() { const f = document.getElementById('cart-comprobante').files[0]; if (f) document.getElementById('file-preview').innerHTML = `<span class="text-green-500 font-bold text-sm"><i data-lucide="check-circle" class="inline w-4 h-4"></i> ${f.name.substring(0,10)}...</span>`; lucide.createIcons(); };
         
-        window.placeOrder = async function() { const ed = document.getElementById('cart-edificio').value; const det = document.getElementById('cart-salon').value; const fi = document.getElementById('cart-comprobante'); if (!det) { showToast('Ubicación requerida', true); return; } if (cart.length === 0) { showToast('Vacío', true); return; } if (fi.files.length === 0) { showToast('Falta comprobante', true); return; } toggleLoading(true); const items = cart.map(i => ({id_producto: i.id, cantidad: i.cantidad})); const fd = new FormData(); fd.append('edificio_entrega', ed); fd.append('detalle_ubicacion', det); fd.append('jornada_entrega', document.getElementById('cart-jornada').value); fd.append('tipo_entrega', document.getElementById('cart-priority').value); fd.append('propina', document.getElementById('cart-tip').value); fd.append('comprobante_pago', fi.files[0]); fd.append('items', JSON.stringify(items)); try { const d = await apiCall('/api/pedidos/', 'POST', fd, true); cart = []; updateCartUI(); document.getElementById('success-order-id').innerText = '#' + d.id; showScreen('screen-order-success'); } catch(e) { showToast(e.message, true); } finally { toggleLoading(false); } };
+        window.placeOrder = async function() { const ed = document.getElementById('cart-edificio').value; const det = document.getElementById('cart-salon').value; const jornada = document.getElementById('cart-jornada').value; const prioridad = document.getElementById('cart-priority').value; const tip = document.getElementById('cart-tip').value; const fileInput = document.getElementById('cart-comprobante'); if (!detalle) { showToast('Ubicación requerida', true); return; } if (cart.length === 0) { showToast('Vacío', true); return; } if (fi.files.length === 0) { showToast('Falta comprobante', true); return; } toggleLoading(true); const items = cart.map(i => ({id_producto: i.id, cantidad: i.cantidad})); const fd = new FormData(); fd.append('edificio_entrega', ed); fd.append('detalle_ubicacion', det); fd.append('jornada_entrega', document.getElementById('cart-jornada').value); fd.append('tipo_entrega', document.getElementById('cart-priority').value); fd.append('propina', document.getElementById('cart-tip').value); fd.append('comprobante_pago', fileInput.files[0]); fd.append('items', JSON.stringify(items)); try { const d = await apiCall('/api/pedidos/', 'POST', fd, true); cart = []; updateCartUI(); document.getElementById('success-order-id').innerText = '#' + d.id; showScreen('screen-order-success'); } catch(e) { showToast(e.message, true); } finally { toggleLoading(false); } };
 
         window.loadCourierData = async function(type) {
              toggleLoading(true); try { const d = await apiCall('/api/pedidos/', 'GET'); const c = document.getElementById('courier-orders-container'); c.innerHTML = ''; const pool = d.filter(o => o.estado === 'EN_COCINA' && !o.repartidor); const mine = d.filter(o => o.estado === 'EN_CAMINO' || o.estado === 'ENTREGADO'); const l = (type === 'pool') ? pool : mine; if (l.length === 0) c.innerHTML = 'Sin pedidos.'; l.forEach(p => { let btn = type === 'pool' ? `<button onclick="acceptOrder(${p.id})">Aceptar</button>` : `<button onclick="deliverOrder(${p.id})">Entregado</button>`; c.innerHTML += `<div>Pedido #${p.id} - ${p.edificio_entrega} ${btn}</div>`; }); } catch(e){} finally { toggleLoading(false); }
