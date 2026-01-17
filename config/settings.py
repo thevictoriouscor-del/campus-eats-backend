@@ -5,19 +5,15 @@ import dj_database_url
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# SEGURIDAD: Clave secreta
-# Lee la variable SECRET_KEY de Render. Si no existe (en tu PC), usa la insegura.
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-clave-super-secreta-de-desarrollo')
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-tu-clave-secreta-aqui')
 
-# DEBUG:
-# Si existe la variable 'RENDER' en el entorno, DEBUG se apaga (Falso).
-# En tu PC (donde no existe esa variable), DEBUG se prende (Verdadero).
+# DEBUG: False en producción (Render)
 DEBUG = 'RENDER' not in os.environ
 
-# HOSTS PERMITIDOS:
 ALLOWED_HOSTS = ['*', 'andeseats.com', 'www.andeseats.com']
 
-# SEGURIDAD HTTPS (CRÍTICO PARA LOGIN EN RENDER)
+# SEGURIDAD HTTPS
 CSRF_TRUSTED_ORIGINS = [
     'https://andeseats.com',
     'https://www.andeseats.com',
@@ -25,21 +21,21 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 INSTALLED_APPS = [
-    'jazzmin',              # 1. Diseño Admin
+    'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'whitenoise.runserver_nostatic', # Optimización estática local
+    'whitenoise.runserver_nostatic',
     'django.contrib.staticfiles',
-    'rest_framework',       # API
-    'core',                 # Tu App
+    'rest_framework',
+    'core',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    "whitenoise.middleware.WhiteNoiseMiddleware", # Motor de archivos estáticos en la nube
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -68,7 +64,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-# BASE DE DATOS INTELIGENTE
 DATABASES = {
     'default': dj_database_url.config(
         default=f'sqlite:///{BASE_DIR / "db.sqlite3"}',
@@ -88,39 +83,32 @@ TIME_ZONE = 'America/Bogota'
 USE_I18N = True
 USE_TZ = True
 
-# ARCHIVOS ESTÁTICOS
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
-# ARCHIVOS MULTIMEDIA
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'core.User'
 
-# --- CONFIGURACIÓN DE CORREO (ROBUSTA) ---
+# --- CONFIGURACIÓN DE CORREO (HOSTINGER OFICIAL) ---
 if 'EMAIL_HOST_USER' in os.environ:
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    
     EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.hostinger.com')
     EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
     EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
     EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
-    DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
     
-    # Lógica explícita para Hostinger
-    if EMAIL_PORT == 465:
-        EMAIL_USE_SSL = True
-        EMAIL_USE_TLS = False
-    else:
-        # Puerto 587 (Recomendado para evitar bloqueos)
-        EMAIL_USE_SSL = False
-        EMAIL_USE_TLS = True
-        
-    EMAIL_TIMEOUT = 30 # Damos más tiempo antes de tirar error
+    # Hostinger recomienda esto para puerto 587
+    EMAIL_USE_TLS = True
+    EMAIL_USE_SSL = False
+    
+    DEFAULT_FROM_EMAIL = os.environ.get('EMAIL_HOST_USER')
+    EMAIL_TIMEOUT = 30 
 else:
-    # Modo local
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # Seguridad de Sesiones
@@ -129,7 +117,6 @@ SESSION_SAVE_EVERY_REQUEST = True
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 LOGOUT_REDIRECT_URL = '/admin/login/'
 
-# Diseño del Admin (JAZZMIN)
 JAZZMIN_SETTINGS = {
     "site_title": "Andes Eats Admin",
     "site_header": "Andes Eats",
