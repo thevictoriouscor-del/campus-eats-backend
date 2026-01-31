@@ -1,10 +1,11 @@
 import json 
-import threading # <--- IMPORTANTE: Para enviar correos sin bloquear
+import threading 
+import os # <--- Necesario para leer variables de Gmail
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action 
 from rest_framework.views import APIView 
 from rest_framework.response import Response
-from django.core.mail import send_mail
+from django.core.mail import send_mail, get_connection, EmailMessage # <--- Importamos herramientas de conexión manual
 from django.shortcuts import render 
 from django.contrib.auth import authenticate, login, logout
 from django.db.models import Q
@@ -12,7 +13,7 @@ from .models import User, Restaurante, Producto, Pedido, DetallePedido
 from .serializers import RestauranteSerializer, ProductoSerializer, PedidoSerializer, RegistroSerializer, VerificacionSerializer
 
 # -----------------------------------------------------------------------------
-# CLASE PARA ENVIAR CORREOS EN SEGUNDO PLANO (ANTI-TIMEOUT)
+# CLASE DE CORREO BLINDADA (HOSTINGER -> FALLBACK -> GMAIL)
 # -----------------------------------------------------------------------------
 class EmailThread(threading.Thread):
     def __init__(self, subject, message, from_email, recipient_list):
@@ -23,7 +24,9 @@ class EmailThread(threading.Thread):
         threading.Thread.__init__(self)
 
     def run(self):
+        # INTENTO 1: HOSTINGER (O lo que esté en settings.py)
         try:
+            print(f"📨 Intentando envío principal a {self.recipient_list}...")
             send_mail(
                 self.subject, 
                 self.message, 
@@ -31,9 +34,45 @@ class EmailThread(threading.Thread):
                 self.recipient_list, 
                 fail_silently=False
             )
-            print("✅ Correo enviado exitosamente en segundo plano")
-        except Exception as e:
-            print(f"❌ Error enviando correo en segundo plano: {e}")
+            print("✅ Correo enviado exitosamente (Vía Principal).")
+            
+        except Exception as e_main:
+            print(f"⚠️ Falló el servidor principal: {e_main}")
+            print("🔄 Iniciando protocolo de respaldo (Gmail)...")
+            
+            # INTENTO 2: GMAIL DE RESPALDO (Manual Connection)
+            try:
+                # Leemos las credenciales de respaldo de Render
+                gmail_user = os.environ.get('GMAIL_USER')
+                gmail_pass = os.environ.get('GMAIL_PASSWORD')
+                
+                if not gmail_user or not gmail_pass:
+                    print("❌ No hay credenciales GMAIL_USER / GMAIL_PASSWORD configuradas.")
+                    return
+
+                # Abrimos una conexión temporal directa a Gmail
+                connection = get_connection(
+                    host='smtp.gmail.com', 
+                    port=587, 
+                    username=gmail_user, 
+                    password=gmail_pass, 
+                    use_tls=True
+                )
+                
+                # Creamos y enviamos el mensaje usando esa conexión
+                email = EmailMessage(
+                    subject=f"[Respaldo] {self.subject}", # Le ponemos marca para que sepas
+                    body=self.message,
+                    from_email=gmail_user,
+                    to=self.recipient_list,
+                    connection=connection
+                )
+                email.send()
+                print("✅ Correo enviado exitosamente (Vía Respaldo Gmail).")
+                
+            except Exception as e_backup:
+                print(f"❌ Falló también el respaldo: {e_backup}")
+                print("💀 El código se queda en logs.")
 
 # -----------------------------------------------------------------------------
 # MAPA DE TARIFAS
@@ -90,6 +129,11 @@ class PedidoViewSet(viewsets.ModelViewSet):
         return Response({'status': 'Entregado'}, 200)
 
     def create(self, request, *args, **kwargs):
+        # 0. BLOQUEO POR NO VERIFICAR CORREO
+        # if not request.user.email_verificado:
+        #      return Response({'error': '⚠️ Verifica tu correo para pedir.'}, status=403)
+        # (Comentado para pruebas, descomentar en producción si quieres bloqueo estricto)
+
         try:
             items_raw = request.data.get('items', '[]')
             items_data = json.loads(items_raw) if isinstance(items_raw, str) else items_raw
@@ -99,6 +143,7 @@ class PedidoViewSet(viewsets.ModelViewSet):
             costo_extra = 2000 if tipo_entrega == 'PRIORITARIA' else (-1000 if tipo_entrega == 'FLEXIBLE' else 0)
             try: propina = int(request.data.get('propina', 0))
             except: propina = 0
+            
             costo_domicilio_total = costo_domicilio_base + costo_extra
             total_comida = 0
             productos_validos = []
@@ -109,16 +154,20 @@ class PedidoViewSet(viewsets.ModelViewSet):
                     total_comida += subtotal
                     productos_validos.append({'producto': prod_db, 'cantidad': int(item['cantidad']), 'precio': prod_db.precio})
                 except Producto.DoesNotExist: pass
+            
             total_final = total_comida + costo_domicilio_total + propina
             datos_pedido = request.data.copy()
             datos_pedido['total_pagar'] = total_final
             datos_pedido['costo_domicilio'] = costo_domicilio_total
             datos_pedido['propina'] = propina
+            
             serializer = self.get_serializer(data=datos_pedido, partial=True)
             serializer.is_valid(raise_exception=True)
             pedido = serializer.save(cliente=self.request.user, total_pagar=total_final, costo_domicilio=costo_domicilio_total, propina=propina)
+
             for p in productos_validos:
                 DetallePedido.objects.create(pedido=pedido, producto=p['producto'], cantidad=p['cantidad'], precio_unitario=p['precio'])
+
             headers = self.get_success_headers(serializer.data)
             return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
         except Exception as e:
@@ -134,7 +183,7 @@ class LoginView(APIView):
             if user.is_active:
                 if user.rol == 'ASPIRANTE': return Response({"error": "Tu solicitud está en revisión."}, 403)
                 login(request, user)
-                return Response({"mensaje": "Bienvenido", "nombre": user.nombre_completo, "rol": user.rol})
+                return Response({"mensaje": "Bienvenido", "nombre": user.nombre_completo, "rol": user.rol, "verificado": user.email_verificado})
             return Response({"error": "Cuenta inactiva"}, 401)
         return Response({"error": "Credenciales incorrectas"}, 400)
 
@@ -152,11 +201,11 @@ class RegistroView(APIView):
                 
                 print(f"\n{'='*40}\n📧 CÓDIGO RESPALDO: {codigo}\n{'='*40}\n")
                 
-                # --- AQUÍ USAMOS EL HILO PARA NO BLOQUEAR ---
+                # --- SISTEMA DE CORREO HÍBRIDO (El "Doble Vida") ---
                 EmailThread(
                     'Tu código de verificación - Uniandes Eats',
-                    f'Hola {user.nombre_completo}, bienvenido.\n\nTu código es: {codigo}',
-                    'contacto@andeseats.com', # Asegúrate que coincida con tu variable en Render
+                    f'Hola {user.nombre_completo}.\n\nTu código es: {codigo}',
+                    'contacto@andeseats.com', # Intento 1: Hostinger
                     [user.email]
                 ).start()
                 
@@ -165,7 +214,7 @@ class RegistroView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             print(f"❌ ERROR GENERAL REGISTRO: {e}")
-            return Response({"error": f"Error interno: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": f"Error interno: {str(e)}"}, status=400)
 
 class VerificacionView(APIView):
     permission_classes = [] 
@@ -175,6 +224,6 @@ class VerificacionView(APIView):
             try: user = User.objects.get(email=serializer.validated_data['email'])
             except: return Response({"error": "No existe"}, 404)
             if user.codigo_verificacion == serializer.validated_data['codigo']:
-                user.email_verificado=True; user.is_active=True; user.save(); return Response({"Ok":1})
+                user.email_verificado=True; user.save(); return Response({"Ok":1})
             return Response({"error": "Código incorrecto"}, 400)
         return Response(serializer.errors, 400)
